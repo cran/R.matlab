@@ -1,0 +1,56 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Do not modify this file since it was automatically generated from:
+% 
+%  
+% 
+% on Fri Feb 25 01:54:38 2005.
+% 
+% Generator was the Rdoc class, which is part of the R.oo package written
+% by Henrik Bengtsson, 2001-2004.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\name{setVerbose.Matlab}
+\alias{setVerbose.Matlab}
+\alias{Matlab.setVerbose}
+\alias{setVerbose.Matlab}
+\alias{setVerbose,Matlab-method}
+\keyword{methods}
+\keyword{internal}
+
+
+\title{Sets the verbose level to get more details about the Matlab access}
+
+\description{
+  Sets the verbose level to get more details about the Matlab access.
+}
+
+\usage{\method{setVerbose}{Matlab}(this, threshold=0, ...)}
+
+\arguments{
+ \item{threshold}{A threshold that the \code{level} argument
+    of any write method has to be equal to or larger than in order to the
+    message being written.
+    Thus, the lower the threshold is the more and more details will be
+    outputted. If a large \code{\link[base]{numeric}} or \code{\link[base:logical]{FALSE}}, no verbose output will be
+    given.}
+ \item{...}{Not used.}
+}
+
+\value{
+  Returns the previous threshold value (an \code{\link[base]{integer}}) used.
+}
+
+\details{
+  If the threshold is set to zero (default) general comments about the
+  Matlab access is given, such as the Matlab server is started etc.
+  If the threshold is \code{-1}, details about the communication with the
+  Matlab server is given.
+  If the threshold is \code{-2}, low-level details about the communication
+  with the Matlab server is given, such as what commands are sent etc.
+}
+
+\author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+
+\seealso{
+  For more information see \code{\link{Matlab}}.
+}

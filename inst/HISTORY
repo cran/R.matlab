@@ -1,0 +1,99 @@
+Package: R.matlab
+=================
+
+Version: 1.0 [2005-02-25]
+o Moved to CRAN.
+
+Version: 0.94 [2005-02-24]
+o Updated the MatlabServer.m script to automatically set the Java
+  classpath for Matlab v7 and higher. This will assure that
+  InputStreamByteWrapper.class is found as long as it is in
+  the same directory as the *.m script. Thanks Yichun Wei at 
+  University of Southern California for suggesting this and
+  also for suggesting additional help instructions.
+o Added a Wishlist and an Acknowledgements section to "about".
+o Added more information on how to start the Matlab server.
+
+Version: 0.93 [2005-02-20]
+o Added autoload("hasVarArgs") to 000.R.
+o Updated the Matlab example to be more explicit about problems
+  with Matlab$startServer() and Matlab v7. 
+
+Version: 0.92 [2005-02-17]
+o Package now passes R CMD check on R v2.1.0 devel without warnings.
+o Added appendVarArgs=TRUE to setMethodS3(), which specifies that
+  '...' should be added, if missing.
+o Add argument '...' to all methods to make it even more consistent
+  with any generic function. This is also done for a few methods
+  in the R base packages.
+o BUG FIX: readMat() would not read non-signed bytes correctly.
+
+Version: 0.91 [2005-02-11]
+o Package passes R CMD check on R v2.1.0 devel too.
+o Moved the Java class from R.io to this package, since it is
+  currently only used here. It is used for reading and writing 
+  Java bytes, ints and (UTF) strings when communicating with Matlab.
+o Updated description of package. Preparing for moving to CRAN.
+o Added Rdoc comments to internal Verbose classes.
+
+Version: 0.8 [2004-02-24]
+o Added a setVerbose() method to the Matlab class, which allows the
+  user to get details at various levels of the Matlab process.
+o WORK AROUND: It sometimes happens that the reply from Matlab is not
+  transferred "quick enough" and even if the connection should block we
+  receive NULL giving an error. The work around for now is to try to
+  read the answer again. The symptom was that an error in readResult()
+  complain about "if (answer == 0)" where answer was of length 0.
+o Added support for reading sparse matrices. Sparse matrices
+  are expanded to regular matrices, which means that some may
+  be too large to be loaded.
+o BUG FIX: The header of MAT v4 files was not parsed correctly, 
+  which made MAT v4 files unrecognized and assumed to be 
+  MAT v5 files which in turn could not be read.
+o BUG FIX: Used "sparce" instead of "sparse" in MOPT[4] tag (MAT v4),
+  which most likely would generate an error for such structure.
+
+Version: 0.7 [2003-12-02]
+o BUG FIX: Introduced a bug that made files written with big endian
+  not to work. The reason was that "<-" was used instead of "<<-"
+  in one new method. I do not like "<<-", but that is how it works.
+
+Version: 0.6 [2003-11-25]
+o Created an readMat() that can read both MAT v4 and MAT v5 files.
+  The MAT v4 reader was kindly provided by Andy Jacobson at the
+  Princeton University. 
+o writeMat() was created for consistency, but it does only support
+  MAT version 5.
+o Note that I have now choosen to rename readMAT() and writeMAT() 
+  to readMat() and writeMat(), respectively. This is in line with
+  the RCC, cf. readHtml() instead of readHTML(). If you really need
+  readMAT() and writeMAT() you can easily write your own wrappers.
+
+Version: 0.5 [2003-04-04]
+o I forgot to remove some debug code that outputs information about
+  the Description comment everytime a MAT file is read. Removed.
+
+Version: 0.4 [2003-01-16]
+o Now require(R.io) is loaded with the package and not when the first
+  Matlab client/server method is called. The former approach was a little
+  bit annoying.
+o BUG FIX: The Matlab client/server implementation was broken due to 
+  bugs introduced in the Java class of the R.io package. Correcting 
+  these bugs made the Matlab part work again.
+
+Version: 0.3 [2002-11-11]
+o BUG FIX: readMAT() would not work because getBits() previously in
+  package R.oo was removed. getBits() is no added as a local 
+  function inside readMAT().
+o Made all methods \keyword{internal}.
+
+Version: 0.2 [2002-10-23]
+o Upgraded to make use of Rx.oo.
+
+Version: 0.1 [2002-09-03]
+o Initial methods are readMAT() and writeMAT() for reading and
+  writing Matlab MAT file structures.
+o Initial class is Matlab, which provides static methods for
+  communicating with running Matlab server.
+o Package created.
+
