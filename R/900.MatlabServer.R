@@ -18,7 +18,7 @@
 #
 # \section{MatlabServer.m script}{
 #  \preformatted{
-#   @include "../inst/misc/MatlabServer.m"
+#   @include "../inst/externals/MatlabServer.m"
 #  }\emph{}
 # }
 #
@@ -29,7 +29,7 @@
 #  communication, that is, with argument \code{remote=TRUE}). 
 #
 #  \preformatted{
-#   @include "../inst/misc/InputStreamByteWrapper.java"
+#   @include "../inst/externals/InputStreamByteWrapper.java"
 #  }\emph{}
 # }
 #*/#########################################################################  

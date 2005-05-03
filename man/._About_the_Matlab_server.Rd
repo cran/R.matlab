@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Fri Feb 25 01:54:17 2005.
+% on Tue May 03 15:49:37 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -57,7 +57,8 @@
 \%  addpath R/R_LIBS/linux/library/R.matlab/misc/
 
 \% Detect major Matlab version
-if (substring(version, 0,0) == '6')
+isVersion7 = eval('length(regexp(version, ''^7'')) ~= 0', '0');
+if (~isVersion7)
   disp('Matlab v6.x detected.');
   \% Default save option
   saveOption = '';
@@ -80,7 +81,7 @@ else
   \% Using dynamic ones, it is possible to add the file
   \% InputStreamByteWrapper.class to CLASSPATH, given it is
   \% in the same directory as this script.
-  javaaddpath({dirname('MatlabServer')});
+  javaaddpath({fileparts(which('MatlabServer'))});
   disp('Added InputStreamByteWrapper to dynamic Java CLASSPATH.');
 end
 
@@ -311,6 +312,10 @@ close(server);
 
 \%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%
 \% HISTORY:
+\% 2005-03-08
+\% o BUG FIX: substring() is not recognized by Matlab v7. Using regexp()
+\%   which works in Matlab 6.5 and 7. Workaround eval('try', 'catch').
+\%   Thanks Patrick Drechsler, University of Wuerzburg for the bug report.
 \% 2005-02-24
 \% o Now the dynamic Java classpath is set for Matlab v7 or higher. This
 \%   will simplify life for Matlab v7 users.

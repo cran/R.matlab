@@ -1,5 +1,27 @@
+
 Package: R.matlab
 =================
+
+Version: 1.0.2 [2005-05-03]
+o Now Matlab struct's are read into an R structure.
+o BUG FIX: Reading empty struct:s (and cells) tried to read one 
+  field because seq(0) and not seq(length=0) was used. Updated all
+  occurances of this problem.
+o Replaces package directory misc/ with two new directories 
+  mat-files/ and externals/.
+
+Version: 1.0.1 [2005-04-08]
+o BUG FIX: readMat() failed to read some Matlab struct's because
+  of a parsing error.
+o BUG FIX: Internally in readMat() - in readMat5DataStructure() it 
+  might be data readTag() returns a tag referering to a data block 
+  of zero length (nbrOfBytes == 0). Now list(NULL) is returned in 
+  this case.
+o BUG FIX: The MatlabServer script did (indeed) not work with 
+  Matlab v7; the wrong version was included.
+  Thanks Patrick Drechsler, University of Wuerzburg for reporting
+  the above two problems.
+o Minor additions to help pages.
 
 Version: 1.0 [2005-02-25]
 o Moved to CRAN.
