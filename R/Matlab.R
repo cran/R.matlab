@@ -57,7 +57,7 @@
 #   \bold{To be done once:}\cr
 #   In Matlab, add the path to the directory where MatlabServer.m sits.
 #   See \code{help pathtool} in Matlab on how to do this.
-#   In R you can type \code{system.file("misc", package="R.matlab")} 
+#   In R you can type \code{system.file("externals", package="R.matlab")} 
 #   to find out the path to MatlabServer.m.
 #   
 #   \bold{For Matlab v6 only:} Contrary to Matlab v6, Matlab v6 cannot
@@ -110,9 +110,10 @@
 # }
 #
 # \section{Confirmed Matlab versions}{
-#   We have \emph{successfully} used this package out of the box 
-#   together with Matlab v6.1.0.450 (R12.1), Matlab v6.5.0.180913a (R13), 
-#   and Matlab v7.0.0.19901 (R14).
+#   This package has been confirmed to work \emph{successfully} out of 
+#   the box together with Matlab v6.1.0.450 (R12.1), 
+#   Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14), 
+#   and Matlab v7.0.1.24704 (R14SP1).
 #   [If you successfully use a higher Matlab version, please tell us, so
 #    we can share it here.]
 #
@@ -574,7 +575,7 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #
 #   The Matlab server relies on two files: 1) MatlabServer.m and
 #   2) InputStreamByteWrapper.class (from InputStreamByteWrapper.java).
-#   These files exists in the misc/ directory of this package. However,
+#   These files exists in the externals/ directory of this package. However,
 #   if they do not exist in the current directory, which is the directory
 #   where Matlab is started, copies of them will automatically be made.
 # }
@@ -595,7 +596,7 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   # create copies of them in the current directory.
   filename <- "MatlabServer.m";
   if (!file.exists(filename)) {
-    src <- system.file("misc", filename, package="R.matlab");
+    src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
     if (!is.null(this$.verbose)) {
       printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
@@ -608,7 +609,7 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   
   filename <- "InputStreamByteWrapper.class";
   if (!file.exists(filename)) {
-    src <- system.file("misc", filename, package="R.matlab");
+    src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
     if (!is.null(this$.verbose)) {
       printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
@@ -621,7 +622,7 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   
   filename <- "InputStreamByteWrapper.java";
   if (!file.exists(filename)) {
-    src <- system.file("misc", filename, package="R.matlab");
+    src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
     if (!is.null(this$.verbose)) {
       printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
@@ -1040,6 +1041,8 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2005-05-03
+# o Moved "external" files such as MatlabServer.m to inst/externals/.
 # 2005-02-24
 # o Removed the use of trycatch() in favor of tryCatch().
 # o Updated the Rdoc comments. Now there is a specific Matlab v7 and higher

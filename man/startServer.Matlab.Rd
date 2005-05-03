@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Fri Feb 25 01:54:36 2005.
+% on Tue May 03 15:50:01 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -58,7 +58,7 @@
 
   The Matlab server relies on two files: 1) MatlabServer.m and
   2) InputStreamByteWrapper.class (from InputStreamByteWrapper.java).
-  These files exists in the misc/ directory of this package. However,
+  These files exists in the externals/ directory of this package. However,
   if they do not exist in the current directory, which is the directory
   where Matlab is started, copies of them will automatically be made.
 }

@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Fri Feb 25 01:54:17 2005.
+% on Tue May 03 15:49:38 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -33,6 +33,8 @@ provides static methods to read and write Java data types.
    The methods for reading and writing MAT files are stable.
    The \R to Matlab interface is less prioritized and should be
    considered a beta version.
+
+   For package history, see \code{showHistory(R.matlab)}.
  }
 
  \section{Installation}{
@@ -42,7 +44,7 @@ provides static methods to read and write Java data types.
 
    To get the "devel" version, use\cr
 
-   install.packages("R.classes", contriburl="http://www.maths.lth.se/help/R/")
+   install.packages("R.classes", contriburl="http://www.maths.lth.se/help/R")
  }
 
  \section{Update}{
@@ -58,6 +60,7 @@ provides static methods to read and write Java data types.
    To connect to Matlab, Matlab v6 or higher is required.
    It does \emph{not} work with Matlab v5 or before.
    This is a cross-platform package implemented in pure \R.
+   For confirmed Matlab versions, see \code{\link{help}}() on the "Matlab" class.
  }
 
  \section{To get started}{
@@ -73,6 +76,9 @@ provides static methods to read and write Java data types.
    and Omegahat.  It provides a bi-directional interface between the
    \R and Matlab languages. For more details, see
    \url{http://www.omegahat.org/RMatlab/}.
+   To call R from Matlab on Windows (only), see \emph{MATLAB R-link}
+   by Robert Henson available at the Matlab Central File Exchange
+   (\url{http://www.mathworks.com/matlabcentral/fileexchange/loadFile.do?objectId=5051}).
  }
 
  \section{How to cite this package}{
@@ -137,6 +143,7 @@ provides static methods to read and write Java data types.
    We wish to thank the following people who contributed with valuable
    feedback, suggestions, and code:
    \itemize{
+    \item Patrick Drechsler, Biocenter, University of Wuerzburg.
     \item Andy Jacobson, Atmospheric and Oceanic Sciences Program,
           Princeton University.
     \item Yichun Wei, Department of Biological Sciences,

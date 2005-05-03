@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Fri Feb 25 01:54:33 2005.
+% on Tue May 03 15:49:58 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -103,7 +103,7 @@ $, $<-, [[, [[<-, as.character, attach, clone, detach, equals, extend, finalize,
    \bold{To be done once:}\cr
    In Matlab, add the path to the directory where MatlabServer.m sits.
    See \code{help pathtool} in Matlab on how to do this.
-   In R you can type \code{system.file("misc", package="R.matlab")}
+   In R you can type \code{system.file("externals", package="R.matlab")}
    to find out the path to MatlabServer.m.
  
    \bold{For Matlab v6 only:} Contrary to Matlab v6, Matlab v6 cannot
@@ -172,9 +172,10 @@ Server socket created.
  }
 
  \section{Confirmed Matlab versions}{
-   We have \emph{successfully} used this package out of the box
-   together with Matlab v6.1.0.450 (R12.1), Matlab v6.5.0.180913a (R13),
-   and Matlab v7.0.0.19901 (R14).
+   This package has been confirmed to work \emph{successfully} out of
+   the box together with Matlab v6.1.0.450 (R12.1),
+   Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14),
+   and Matlab v7.0.1.24704 (R14SP1).
    [If you successfully use a higher Matlab version, please tell us, so
     we can share it here.]
 

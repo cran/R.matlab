@@ -18,6 +18,8 @@
 #  by default [3]. These are not supported. 
 #  Use \code{save -V6} in Matlab to write a MAT file compatible with 
 #  Matlab v6, that is, to write a non-compressed MAT version 5 file.
+#  Note: Do not mix up version numbers for the Matlab software and
+#  the Matlab file formats.
 # }
 #
 # @synopsis
@@ -848,6 +850,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  # Treat unsigned values too.
   	  padding <- 4 - ((nbrOfBytes-1) %% 4 + 1);
   	} else {
+#    print(c(size=size, n=n, signed=signed, endian=endian, bfr=bfr));
   	  nbrOfBytes <- readBinMat(con, what=integer(), size=4, n=1);
   	  left <<- left - 4;
   	  padding <- 8 - ((nbrOfBytes-1) %% 8 + 1);
@@ -856,7 +859,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	type <- names(knownTypes)[type+1];
   	sizeOf <- as.integer(knownTypes[type]);
   	what <- knownWhats[[type]];
-      #  cat("type=", type, ", sizeOf=", sizeOf, ", what=", typeof(what), "\n", sep="");
+#        cat("type=", type, ", sizeOf=", sizeOf, ", what=", typeof(what), "\n", sep="");
       
   	signed <- isSigned(type);
       
@@ -894,7 +897,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	} # getBits()
   
   	tag <- readTag(this);
-
+  
   	knownTypes <- c("mxCELL_CLASS"=NA, "mxSTRUCT_CLASS"=NA, "mxOBJECT_CLASS"=NA, "mxCHAR_CLASS"=8, "mxSPARSE_CLASS"=NA, "mxDOUBLE_CLASS"=NA, "mxSINGLE_CLASS"=NA, "mxINT8_CLASS"=8, "mxUINT8_CLASS"=8, "mxINT16_CLASS"=16, "mxUINT16_CLASS"=16, "mxINT32_CLASS"=32, "mxUINT32_CLASS"=32);
 
         # Read the first miUINT32 integer
@@ -906,7 +909,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         # array type (class) represented by the data element."
         #
   	class <- arrayFlags %% 256;
-  	if (class < 1 || class > length(knownTypes)) {
+  	if (class < 1 || class > length(knownTypes)) { 
   	  stop(paste("Unknown array type (class). Not in [1,",
                       length(knownTypes), "]: ", class, sep=""));
         }
@@ -971,7 +974,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	dimArray <- list(tag=tag, dim=dim);
         
         if (verbose) {
-          debugPrint(dim);
+          debugPrint(list(dim=dim));
           debugExit("Reading Dimensions Array");
         }
         
@@ -1048,7 +1051,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   #      cat("tag$nbrOfBytes=",tag$nbrOfBytes,"\n");
   #      cat("maxLength=",maxLength,"\n");
   #      cat("nbrOfNames=",nbrOfNames,"\n");
-  	for (k in seq(nbrOfNames)) {
+  	for (k in seq(length=nbrOfNames)) {
       #    name <- readCharMat(con, nchars=maxLength);
   	  name <- readBinMat(con, what=integer(), size=1, n=maxLength);
   	  name <- intToChar(name);
@@ -1057,7 +1060,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  left <<- left - maxLength;
   	  names <- c(names, name);
   	}
-  	
+
+        if (verbose)
+          debug("Reading ", tag$padding, " padding bytes.");
+  	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
+  	left <<- left - tag$padding;
+
   	if (verbose)
   	  debug("Field names: ", paste(paste("'", names, "'", sep=""), collapse=", "));
         
@@ -1083,8 +1091,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         
   	fields <- list();
   	for (k in seq(names)) {
+          if (verbose)
+            debugEnter("Reading field: ", names[k]);
   	  field <- readMat5DataElement(this);
   	  fields <- c(fields, field);
+          if (verbose)
+            debugExit("Reading field: ", names[k]);
   	}
   	names(fields) <- names;
   	
@@ -1136,12 +1148,15 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	arrayFlags <- readArrayFlags(this);
   	dimensionsArray <- readDimensionsArray(this);
   	arrayName <- readName(this);
+
+#str(arrayName)
       
   	if (arrayFlags$class == "mxCELL_CLASS") {
   	  nbrOfCells <- prod(dimensionsArray$dim);
-      #    cat("Reading ", nbrOfCells, " cells.\n", sep="");
+          if (verbose)
+            cat("Reading ", nbrOfCells, " cells.\n", sep="");
   	  matrix <- list();
-  	  for (k in seq(nbrOfCells)) {
+  	  for (kk in seq(length=nbrOfCells)) {
   	    tag <- readTag(this);
   	    cell <- readMiMATRIX(this);
   	    matrix <- c(matrix, cell);
@@ -1149,13 +1164,49 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  matrix <- list(matrix);
   	  names(matrix) <- arrayName$name;
   	} else if (arrayFlags$class == "mxSTRUCT_CLASS") {
+  	  nbrOfCells <- prod(dimensionsArray$dim);
+          if (verbose)
+            cat("Reading ", nbrOfCells, " cells in structure.\n", sep="");
   	  maxLength <- readFieldNameLength(this);
   	  names <- readFieldNames(this, maxLength=maxLength$maxLength);
-      #    print(names);
-  	  fields <- readFields(this, names=names$names);
-      #    str(fields);
-  	  matrix <- list(fields);
-  	  names(matrix) <- arrayName$name;
+          if (verbose)
+            cat("Field names: ", paste(names$names, collapse=", "), "\n", sep="");
+          nbrOfFields <- length(names$names);
+  	  matrix <- list();
+  	  for (kk in seq(length=nbrOfCells)) {
+#            cat("Cell: ", kk, "...\n", sep="");
+    	    fields <- readFields(this, names=names$names);
+#            str(fields);
+            matrix <- c(matrix, fields);
+#            cat("Cell: ", kk, "...done\n", sep="");
+  	  }
+          names(matrix) <- NULL;
+
+          # Set the dimension of the structure
+          dim <- c(nbrOfFields, dimensionsArray$dim);
+          if (prod(dim) > 0) {
+            matrix <- structure(matrix, dim=dim);
+            dimnames <- rep(list(NULL), length(dim(matrix)));
+            dimnames[[1]] <- names$names;
+            dimnames(matrix) <- dimnames;
+          }
+
+          # Finally, put the structure in a named list.
+          matrix <- list(matrix);
+          names(matrix) <- arrayName$name;
+
+          if (verbose) {
+            cat("Read a 'struct':\n");
+            str(matrix);
+          }
+#old#  	  maxLength <- readFieldNameLength(this);
+#old#  	  names <- readFieldNames(this, maxLength=maxLength$maxLength);
+#old#         print(names);
+#old#  	  fields <- readFields(this, names=names$names);
+#old#  	  names(fields) <- arrayName$name;
+#old#          str(fields);
+#old#  	  matrix <- list(fields);
+#old#  	  names(matrix) <- arrayName$name;
   	} else if (arrayFlags$class == "mxOBJECT_CLASS") {
   	  className <- readName(this)$name;
   	  maxLength <- readFieldNameLength(this);
@@ -1345,6 +1396,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       if (is.null(tag))
   	return(NULL);
     
+      if (tag$nbrOfBytes == 0)
+  	return(list(NULL));
+
       left <<- tag$nbrOfBytes;
       if (tag$type == "miMATRIX") {
   	data <- readMiMATRIX(this);
@@ -1435,6 +1489,22 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 ######################################################################
 # HISTORY:
+# 2005-05-02
+# o Updated such that multidimensional (not only one and two dims)
+#   Matlab struct:s can be read.
+# 2005-04-22
+# o Updated to read Matlab struct:s as R structure:s.
+# o BUG FIX: Reading empty struct:s (and cells) tried to read one 
+#   field because seq(0) and not seq(length=0) was used. Updated all
+#   occurances of this problem.
+# 2005-04-08
+# o BUG FIX: In readMat5DataStructure() it might be data readTag()
+#   returns a tag referering to a data block of zero length
+#   (nbrOfBytes == 0). Now list(NULL) is returned in this case.
+# o BUG FIX: Forgot to reading padded bytes after reading field names
+#   in readFieldNames().
+# o Added a small comment of differences between file format versions
+#   and software versions.
 # 2005-02-16
 # o Added a reference to the new updated MAT-File Format v7 docs.
 # o Made readMat() a default method.
@@ -1443,7 +1513,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 #   Forgot to add signed=tag$signed in internal readValues().
 # 2004-10-13
 # o UPDATE for R v2.0.0: matrix[r,c] with r or c with NA's are not
-#   allowed anymore in R v2.0.0. Checks for this in readMiMatrix().
+#   allowed anymore in R v2.0.0. Checks for this in readMiMATRIX().
 # 2004-02-10
 # o Added support for sparse matrices for MAT v5. Wow, that was
 #   tricky, because the documention was sparse (ha!).

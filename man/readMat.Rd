@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Fri Feb 25 01:54:38 2005.
+% on Tue May 03 15:50:05 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -30,6 +30,8 @@
  by default [3]. These are not supported.
  Use \code{save -V6} in Matlab to write a MAT file compatible with
  Matlab v6, that is, to write a non-compressed MAT version 5 file.
+ Note: Do not mix up version numbers for the Matlab software and
+ the Matlab file formats.
 }
 
 \usage{\method{readMat}{default}(con, maxLength=NULL, fixNames=TRUE, verbose=FALSE, ...)}
@@ -62,8 +64,11 @@
 }
 
 \examples{
-path <- system.file("misc", package="R.matlab")
+path <- system.file("mat-files", package="R.matlab")
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Reading all example files
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for (version in 4:5) {
   cat("Loading all MAT v", version, " example files in ",
                                                 path, "...\n", sep="")
@@ -82,15 +87,18 @@ for (version in 4:5) {
   }
 }
 
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Verify that sparse matrices are read the same way in MAT v4 and MAT v5
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 mat4 <- readMat(file.path(path, "SparseMatrix3-v4.mat"))
 mat5 <- readMat(file.path(path, "SparseMatrix3-v5.mat"))
 diff <- sum(abs(mat4$sparseM - mat5$sparseM))
 if (diff > .Machine$double.eps)
   stop("Failed to read identical MAT v4 and MAT v5 sparse matrices.")
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Assert that signed and unsigned integer sare read correctly
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bs <- readMat(file.path(path, "unsignedByte.mat"))
 if (!identical(as.vector(bs$A), as.double(126:255)))
   stop("Error reading unsigned bytes saved by Matlab.")
@@ -98,6 +106,33 @@ if (!identical(as.vector(bs$A), as.double(126:255)))
 is <- readMat(file.path(path, "unsignedInt.mat"))
 if (!identical(as.vector(is$B), as.double(127:256)))
   stop("Error reading unsigned ints saved by Matlab.")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Example of a Matlab struct
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# File was created by
+# s = struct('type',{'big','little'},  'color','red',  'x',{3,4})
+#  1x2 struct array with fields:
+#      type
+#      color
+#      x
+# save structLooped.mat s -v6
+mat <- readMat(file.path(path, "structLooped.mat"))
+
+# Extract the structure
+s <- mat$s
+
+# Field names are always in the first dimension
+fields <- dimnames(s)[[1]]
+cat("Field names: ", paste(fields, collapse=", "), "\n", sep="");
+
+print(s)
+
+# Get field 'type'
+print(s["type",,])
+
+# Get substructure s(:,2)
+print(s[,,2])
 }
 
 \author{
