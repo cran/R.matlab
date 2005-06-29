@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:14 2005.
+% on Mon Jun 27 09:58:41 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -36,8 +36,14 @@
     connection. Since the MAT file structure does not contain information
     about the total size of the structure this argument makes it possible
     to first write the structure size (in bytes) to the connection.}
-  \item{verbose}{If \code{\link[base:logical]{TRUE}}, debug information is written to
-    standard output, otherwise not.}
+  \item{verbose}{Either a \code{\link[base]{logical}}, a \code{\link[base]{numeric}}, or a \code{\link[R.utils]{Verbose}}
+    object specifying how much verbose/debug information is written to
+    standard output. If a Verbose object, how detailed the information is
+    is specified by the threshold level of the object. If a numeric, the
+    value is used to set the threshold of a new Verbose object. If \code{\link[base:logical]{TRUE}},
+    the threshold is set to -1 (minimal). If \code{\link[base:logical]{FALSE}}, no output is written
+    (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+  }
 
   Note that \code{...} must \emph{not} contain variables with names equal
   to the arguments \code{matVersion} and \code{onWrite}, which were choosen
@@ -77,7 +83,7 @@ writeMat(con, A=A, B=B, onWrite=onWrite)
   \code{\link{readMat}}().
 }
 
+
+
 \keyword{file}
-
 \keyword{IO}
-

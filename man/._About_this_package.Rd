@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:49:38 2005.
+% on Mon Jun 27 09:58:25 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -11,56 +11,53 @@
 
  \name{. About this package}
 \alias{. About this package}
-\keyword{documentation}
 
 \title{About this package}
 
  \alias{R.matlab}
 
  \description{
-   This package provides methods to read and write MAT
-files.  It also makes it possible to communicate (evaluate
-code, send and retrieve objects etc.) with Matlab v6 or higher
-running locally or on a remote host.  The auxillary Java class
-provides static methods to read and write Java data types.
+   This package provides methods to read and write MAT files.  It also makes it possible to communicate (evaluate code, send and retrieve objects etc.) with Matlab v6 or higher running locally or on a remote host.
 
    In brief, this package provides a one-directional interface from
    \R to Matlab, with communication taking place via a TCP/IP connection
    and with data transferred either through another connection or via
    the file system. On the Matlab side, the TCP/IP connection is handled
-   by Java.
+   by a small Java add-on.
 
    The methods for reading and writing MAT files are stable.
-   The \R to Matlab interface is less prioritized and should be
-   considered a beta version.
+   The \R to Matlab interface, that is the Matlab class, is less
+   prioritized and should be considered a beta version.
 
    For package history, see \code{showHistory(R.matlab)}.
+ }
+
+ \section{Requirements}{
+   This is a cross-platform package implemented in plain \R.
+   This package depends on the packages
+   \link[R.oo:._About_this_package]{R.oo} [1].
+
+   To use the Matlab class or requesting verbose output messages, the
+   \link[R.utils:._About_this_package]{R.utils} package is loaded
+   when needed (and therefore required at in those cases).
+
+   The \code{readMat()} and \code{writeMat()} methods do \eqn{not} require a
+   Matlab installation neither do they depend on the Matlab class.
+
+   To connect to Matlab, Matlab v6 or higher is required.
+   It does \emph{not} work with Matlab v5 or before.
+   For confirmed Matlab versions, see \code{\link{help}}() on the "Matlab" class.
  }
 
  \section{Installation}{
    To install this package do\cr
 
-   \code{install.packages(c("R.oo", "R.matlab"))}
+   \code{install.packages("R.matlab")}
 
-   To get the "devel" version, use\cr
-
-   install.packages("R.classes", contriburl="http://www.maths.lth.se/help/R")
- }
-
- \section{Update}{
-   To update this package do\cr
-
-   \code{update.packages()}
- }
-
- \section{Dependancies and other requirements}{
-   This package depends on the \link[R.oo:._About_this_package]{R.oo} package.
-   The \code{readMat()} and \code{writeMat()} methods do
-   \eqn{not} require a Matlab installation.
-   To connect to Matlab, Matlab v6 or higher is required.
-   It does \emph{not} work with Matlab v5 or before.
-   This is a cross-platform package implemented in pure \R.
-   For confirmed Matlab versions, see \code{\link{help}}() on the "Matlab" class.
+   Required packages are installed in the same way.  To update, do
+   \code{update.packages()}.  To get the "devel" version, add argument
+   \code{contriburl="http://www.maths.lth.se/help/R/"} to the above
+   commands.
  }
 
  \section{To get started}{
@@ -82,7 +79,7 @@ provides static methods to read and write Java data types.
  }
 
  \section{How to cite this package}{
-   Whenever using this package, please cite [1] as\cr
+   Whenever using this package, please cite [2] as\cr
 
    \preformatted{@TECHREPORT{BengtssonH_2005,
   author = {Bengtsson, Henrik},
@@ -98,7 +95,33 @@ provides static methods to read and write Java data types.
 
  }
 
- \author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+ \section{Troubleshooting}{
+   \bold{In general.}:\cr
+   For trouble shooting in general, rerun erroneous function with
+   verbose/debug messages turned on. For \code{readMat()} and \code{writeMat()}
+   see their help. For communication with a Matlab server, use
+   \preformatted{
+    matlab <- Matlab()
+    setOption(matlab, "verbose", Verbose(threshold=-10))
+   }
+   The lower the threshold is the more information you will see.\cr
+
+   \bold{Excepted an 'answer' from Matlab, but kept receiving nothing.}:\cr
+     When spawning a really long Matlab process by \code{evaluate()}, you
+   may get the above error message.\cr
+   \emph{Reason:} This happens because \code{evaluate()} expect a reply
+   from Matlab as soon as Matlab is done. The waiting should be "blocked",
+   i.e. it should wait until it receives something. For unknown reasons,
+   this is not always happening. The workaround we have implemented is to
+   try \code{readResult/maxTries} waiting \code{readResult/interval} seconds
+   inbetween.\cr
+   \emph{Solution:}
+   Increase the total waiting time by setting the above options, e.g.
+   \preformatted{
+    setOption(matlab, "readResult/interval", 10); # Default is 1 second
+    setOption(matlab, "readResult/maxTries", 30*(60/10)); # ~30 minutes
+   }
+ }
 
  \section{Wishlist}{
   Here is a list of features that would be useful, but which I have
@@ -140,20 +163,40 @@ provides static methods to read and write Java data types.
  }
 
  \section{Acknowledgements}{
-   We wish to thank the following people who contributed with valuable
+   Thanks to the following people who contributed with valuable
    feedback, suggestions, and code:
    \itemize{
     \item Patrick Drechsler, Biocenter, University of Wuerzburg.
     \item Andy Jacobson, Atmospheric and Oceanic Sciences Program,
           Princeton University.
+    \item Chris Sims, Department of Economics, Princeton University.
     \item Yichun Wei, Department of Biological Sciences,
           University of Southern California.
    }
  }
 
- \section{References}{
-   [1] Henrik Bengtsson,
-       \emph{R.matlab - Local and remote Matlab connectivity in R},
-        Mathematical Statistics, Centre for Mathematical Sciences,
-       Lund University, Sweden, 2005. (manuscript in progress).
+ \section{License}{
+   The releases of this package is licensed under
+   LGPL version 2.1 or newer.
+
+   The development code of the packages is under a private licence
+   (where applicable) and patches sent to the author fall under the
+   latter license, but will be, if incorporated, released under the
+   "release" license above.
  }
+
+ \author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+
+ \section{References}{
+ [1] Henrik Bengtsson, \emph{The R.oo package - Object-Oriented Programming
+     with References Using Standard R Code}, In Kurt Hornik, Friedrich
+     Leisch and Achim Zeileis, editors, Proceedings of the 3rd
+     International Workshop on Distributed Statistical Computing
+     (DSC 2003), March 20-22, Vienna, Austria.
+     \url{http://www.ci.tuwien.ac.at/Conferences/DSC-2003/Proceedings/} \cr
+ [2] Henrik Bengtsson,
+     \emph{R.matlab - Local and remote Matlab connectivity in R},
+     Mathematical Statistics, Centre for Mathematical Sciences,
+     Lund University, Sweden, 2005. (manuscript in progress).
+ }
+\keyword{documentation}

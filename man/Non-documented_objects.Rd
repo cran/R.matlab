@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:49:39 2005.
+% on Mon Jun 27 09:58:26 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -11,41 +11,22 @@
 
 \name{Non-documented objects}
 \alias{Non-documented objects}
-\keyword{documentation}
 \title{Non-documented objects}
 
 
-\alias{cat}
-\alias{cat.default}
 \alias{evaluate}
-\alias{getThreshold}
+\alias{getOption}
+\alias{getOption.default}
 \alias{getVariable}
-\alias{isVisible}
-\alias{newline}
-\alias{printf}
+\alias{isOpen}
+\alias{isOpen.default}
 \alias{readResult}
-\alias{ruler}
 \alias{setFunction}
-\alias{setThreshold}
+\alias{setOption}
 \alias{setVariable}
 \alias{setVerbose}
 \alias{startServer}
 \alias{writeCommand}
-
-\alias{asByte}
-\alias{asInt}
-\alias{asLong}
-\alias{asShort}
-\alias{isOpen}
-\alias{isOpen.default}
-\alias{readByte}
-\alias{readInt}
-\alias{readShort}
-\alias{readUTF}
-\alias{writeByte}
-\alias{writeInt}
-\alias{writeShort}
-\alias{writeUTF}
 
 \description{
   This page contains aliases for all "non-documented" objects that
@@ -61,5 +42,6 @@
 
 \author{Henrik Bengtsson \url{http://www.braju.com/R/}}
 
-\keyword{internal}
 
+\keyword{documentation}
+\keyword{internal}

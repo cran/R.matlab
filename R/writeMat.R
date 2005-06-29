@@ -24,8 +24,14 @@
 #     connection. Since the MAT file structure does not contain information
 #     about the total size of the structure this argument makes it possible
 #     to first write the structure size (in bytes) to the connection.}
-#   \item{verbose}{If @TRUE, debug information is written to 
-#     standard output, otherwise not.}
+#   \item{verbose}{Either a @logical, a @numeric, or a @see "R.utils::Verbose"
+#     object specifying how much verbose/debug information is written to
+#     standard output. If a Verbose object, how detailed the information is
+#     is specified by the threshold level of the object. If a numeric, the
+#     value is used to set the threshold of a new Verbose object. If @TRUE, 
+#     the threshold is set to -1 (minimal). If @FALSE, no output is written
+#     (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+#   }
 #
 #   Note that \code{...} must \emph{not} contain variables with names equal
 #   to the arguments \code{matVersion} and \code{onWrite}, which were choosen
@@ -156,7 +162,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
   #===========================================================================
   # MAT v5 specific                                                      BEGIN
   #===========================================================================
-  writeMat5 <- function(con, objects, onWrite=onWrite, format="matlab", verbose=verbose) {
+  writeMat5 <- function(con, objects, onWrite=onWrite, format="matlab") {
     writeHeader <- function() {
       # Write 124 bytes header description
       rVersion <- paste(c(R.Version()$major, R.Version()$minor), collapse=".");
@@ -185,16 +191,14 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
       #   |                                       |
       #   +---------------------------------------+
     
-      if (verbose)
-  	cat("writeDataElement()\n", sep="");
+      verbose && cat(verbose, "writeDataElement()");
     
       writeTag <- function(dataType, nbrOfBytes, compressed=FALSE) {
   	if (!countOnly) {
   	  nbrOfBytes <- nbrOfBytesList[1];
   	  nbrOfBytesList <<- nbrOfBytesList[-1];
   	}
-  	if (verbose)
-  	  cat("dataType=", dataType, ", nbrOfBytes=", nbrOfBytes, "\n", sep="");
+  	verbose && cat(verbose, "dataType=", dataType, ", nbrOfBytes=", nbrOfBytes);
   	knownTypes <- c("miINT8"=8, "miUINT8"=8, "miINT16"=16, "miUINT16"=16, "miINT32"=32, "miUINT32"=32, "miSINGLE"=NA, NA, "miDOUBLE"=64, NA, NA, "miINT64"=64, "miUINT64"=64, "miMATRIX"=NA);
   	type <- which(names(knownTypes) == dataType);
   	if (length(type) == 0)
@@ -220,8 +224,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
       }
     
       writeArrayFlags <- function(class, complex=FALSE, global=FALSE, logical=FALSE) {
-  	if (verbose)
-  	  cat("writeArrayFlags(): ", class, "\n", sep="");
+  	verbose && cat(verbose, "writeArrayFlags(): ", class);
   	knownClasses <- c("mxCELL_CLASS"=NA, "mxSTRUCT_CLASS"=NA, "mxOBJECT_CLASS"=NA, "mxCHAR_CLASS"=8, "mxSPARSE_CLASS"=NA, "mxDOUBLE_CLASS"=NA, "mxSINGLE_CLASS"=NA, "mxINT8_CLASS"=8, "mxUINT8_CLASS"=8, "mxINT16_CLASS"=16, "mxUINT16_CLASS"=16, "mxINT32_CLASS"=32, "mxUINT32_CLASS"=32);
   	classID <- which(names(knownClasses) == class);
   	if (length(classID) == 0)
@@ -249,8 +252,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
   	nbrOfBytes <- nbrOfDimensions*4;
   	padding <- 8 - ((nbrOfBytes-1) %% 8 + 1);
   	
-  	if (verbose)
-  	  cat("writeDimensionsArray(): dim=c(", paste(dim, collapse=","), ")\n", sep="");
+  	verbose && cat(verbose, "writeDimensionsArray(): dim=c(", paste(dim, collapse=","), ")");
   	
   	# Dimensions Array [miINT32]
   	writeTag(dataType="miINT32", nbrOfBytes=nbrOfBytes);
@@ -270,8 +272,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeArrayName <- function(name) {
-  	if (verbose)
-  	  cat("writeArrayName(): '", name, "'\n", sep="");
+ 	verbose && cat(verbose, "writeArrayName(): '", name, "'");
   	name <- charToInt(unlist(strsplit(name,"")));
   	nbrOfBytes <- length(name);
     
@@ -300,8 +301,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeNumericPart <- function(values) {
-  	if (verbose)
-  	  cat("writeNumericPart(): ", length(values), " value(s)\n", sep="");
+  	verbose && cat(verbose, "writeNumericPart(): ", length(values), " value(s).");
   	
   	if (is.integer(values)) {
   	  dataType <- "miINT32"
@@ -336,8 +336,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeNumericArray <- function(name, data) {
-  	if (verbose)
-  	  cat("writeNumericArray(): ", name, "\n", sep="");
+  	verbose && cat(verbose, "writeNumericArray(): ", name);
   	
   	if (is.integer(data)) {
   	  class <- "mxINT32_CLASS"
@@ -368,8 +367,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeCharPart <- function(values) {
-  	if (verbose)
-  	  cat("writeCharPart(): '", values, "'\n", sep="");
+  	verbose && cat(verbose, "writeCharPart(): '", values, "'");
   	
   	values <- charToInt(unlist(strsplit(values, "")));
   	values <- as.vector(values);
@@ -399,8 +397,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeCharArray <- function(name, data) {
-  	if (verbose)
-  	  cat("writeCharArray(): '", data, "'\n", sep="");
+  	verbose && cat(verbose, "writeCharArray(): '", data, "'");
   	
   	if (length(data) > 1)
   	  stop("writeCharArray() only supports one string at the time.");
@@ -412,8 +409,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeFieldNameLength <- function(maxLength=32) {
-  	if (verbose)
-  	  cat("writeFieldNameLength(): ", maxLength, "\n", sep="");
+  	verbose && cat(verbose, "writeFieldNameLength(): ", maxLength);
   	
   	# Field Name Length [miINT32]
   	writeTag(dataType="miINT32", nbrOfBytes=4, compressed=TRUE);
@@ -435,8 +431,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeFieldNames <- function(fieldNames, maxLength=32) {
-  	if (verbose)
-  	  cat("writeFieldNames(): ", length(fieldNames), " names(s)\n", sep="");
+  	verbose && cat(verbose, "writeFieldNames(): ", length(fieldNames), " names(s)");
   	
   	# Field Names [miINT8]
   	nbrOfBytes <- length(fieldNames)*maxLength;
@@ -458,8 +453,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     
       
       writeStructure <- function(name, structure) {
-  	if (verbose)
-  	  cat("writeStructure()\n", sep="");
+  	verbose && cat(verbose, "writeStructure()");
   	
   	writeArrayFlags(class="mxSTRUCT_CLASS", complex=FALSE, global=FALSE, logical=FALSE);
   	writeDimensionsArray(dim=c(1,1));
@@ -563,7 +557,23 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # "Main program"
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # Since writeMat5() is wrapped inside the readMat() function, we can 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Validate arguments
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Argument 'verbose':
+    if (inherits(verbose, "Verbose")) {
+    } else if (is.numeric(verbose)) {
+      require(R.utils) || throw("Package not available: R.utils");
+      verbose <- Verbose(threshold=verbose);
+    } else {
+      verbose <- as.logical(verbose);
+      if (verbose) {
+        require(R.utils) || throw("Package not available: R.utils");
+        verbose <- Verbose(threshold=-1);
+      }
+    }
+
+    # Since writeMat5() is wrapped inside the writeMat() function, we can 
     # assume that 'con' really is a connection and 'objects' really is a
     # list.
 
@@ -634,7 +644,7 @@ setMethodS3("writeMat", "default", function(con, ..., matVersion="5", onWrite=NU
     stop("Can only write a MAT file structure to a *binary* connection.");
 
   if (matVersion == "5") {
-    writeMat5(con, objects=args, onWrite=onWrite, verbose=verbose);
+    writeMat5(con, objects=args, onWrite=onWrite);
   } else {
     stop(paste("Can not write MAT file. Unknown or unsupported MAT version: ", 
                                                          matVersion, sep=""));

@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:00 2005.
+% on Mon Jun 27 09:58:35 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.finalize}
 \alias{finalize.Matlab}
 \alias{finalize,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Finalizes the object if deleted}
@@ -43,3 +41,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}

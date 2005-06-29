@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:49:58 2005.
+% on Mon Jun 27 09:58:33 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -12,7 +12,6 @@
  \name{Matlab}
 \docType{class}
 \alias{Matlab}
-\keyword{classes}
 
 
  \title{Matlab client for remote or local Matlab access}
@@ -51,10 +50,12 @@ extends \link[R.oo]{Object}\cr
  \tab \code{\link[R.matlab:close.Matlab]{close}} \tab Closes connection to Matlab server.\cr
  \tab \code{\link[R.matlab:evaluate.Matlab]{evaluate}} \tab Evaluates a Matlab expression.\cr
  \tab \code{\link[R.matlab:finalize.Matlab]{finalize}} \tab Finalizes the object if deleted.\cr
+ \tab \code{\link[R.matlab:getOption.Matlab]{getOption}} \tab Gets the value of an option.\cr
  \tab \code{\link[R.matlab:getVariable.Matlab]{getVariable}} \tab Gets one or several Matlab variables.\cr
  \tab \code{\link[R.matlab:isOpen.Matlab]{isOpen}} \tab Checks if connection to the Matlab server is open.\cr
  \tab \code{\link[R.matlab:open.Matlab]{open}} \tab Tries to open a connection to the Matlab server.\cr
  \tab \code{\link[R.matlab:setFunction.Matlab]{setFunction}} \tab Defines a Matlab function.\cr
+ \tab \code{\link[R.matlab:setOption.Matlab]{setOption}} \tab Sets the value of an option.\cr
  \tab \code{\link[R.matlab:setVariable.Matlab]{setVariable}} \tab Sets one or several Matlab variables.\cr
  \tab \code{\link[R.matlab:setVerbose.Matlab]{setVerbose}} \tab Sets the verbose level to get more details about the Matlab access.\cr
  \tab \code{\link[R.matlab:startServer.Matlab]{startServer}} \tab Static method which starts a Matlab server.\cr
@@ -62,7 +63,7 @@ extends \link[R.oo]{Object}\cr
 
 
 \bold{Methods inherited from Object}:\cr
-$, $<-, [[, [[<-, as.character, attach, clone, detach, equals, extend, finalize, getFields, getInstanciationTime, getStaticInstance, hasField, hashCode, ll, load, objectSize, print, save
+$, $<-, [[, [[<-, as.character, attach, attachLocally, clone, detach, equals, extend, finalize, getFields, getInstanciationTime, getStaticInstance, hasField, hashCode, ll, load, objectSize, print, save
 
 
  }
@@ -250,4 +251,5 @@ close(matlab)
    for reading and writing MAT file structures.
  }
 
- 
+
+\keyword{classes}

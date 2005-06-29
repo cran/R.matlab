@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:05 2005.
+% on Mon Jun 27 09:58:40 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -45,8 +45,14 @@
     If \code{NULL}, data will be read until End Of File has been reached.}
   \item{fixNames}{If \code{\link[base:logical]{TRUE}}, names of Matlab variables and fields are
     renamed such that they are valid variables names in R.}
-  \item{verbose}{If \code{\link[base:logical]{TRUE}}, debug information is written to standard output,
-    otherwise not.}
+  \item{verbose}{Either a \code{\link[base]{logical}}, a \code{\link[base]{numeric}}, or a \code{\link[R.utils]{Verbose}}
+    object specifying how much verbose/debug information is written to
+    standard output. If a Verbose object, how detailed the information is
+    is specified by the threshold level of the object. If a numeric, the
+    value is used to set the threshold of a new Verbose object. If \code{\link[base:logical]{TRUE}},
+    the threshold is set to -1 (minimal). If \code{\link[base:logical]{FALSE}}, no output is written
+    (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+  }
   \item{...}{Not used.}
 }
 
@@ -152,7 +158,7 @@ print(s[,,2])
   [3] The MathWorks Inc., \emph{Matlab - MAT-File Format, version 7}, October 2004, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
 }
 
+
+
 \keyword{file}
-
 \keyword{IO}
-

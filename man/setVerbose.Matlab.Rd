@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:04 2005.
+% on Mon Jun 27 09:58:39 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.setVerbose}
 \alias{setVerbose.Matlab}
 \alias{setVerbose,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Sets the verbose level to get more details about the Matlab access}
@@ -54,3 +52,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}

@@ -1,0 +1,44 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Do not modify this file since it was automatically generated from:
+% 
+%  
+% 
+% on Mon Jun 27 09:58:34 2005.
+% 
+% Generator was the Rdoc class, which is part of the R.oo package written
+% by Henrik Bengtsson, 2001-2004.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\name{getOption.Matlab}
+\alias{getOption.Matlab}
+\alias{Matlab.getOption}
+\alias{getOption.Matlab}
+\alias{getOption,Matlab-method}
+
+
+\title{Gets the value of an option}
+
+\description{
+  Gets the value of an option where the option is specified like a file pathname, e.g.
+  "readResult/maxTries". See the \link[R.utils]{Options} class for details.
+}
+
+\usage{\method{getOption}{Matlab}(this, ...)}
+
+\arguments{
+ \item{...}{Arguments passed to \code{\link[R.utils:getOption.Options]{getOption()}}
+   of the Options class.}
+}
+
+\value{
+  Returns the value of the option.
+}
+
+\author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+
+\seealso{
+  \code{\link[R.matlab:setOption.Matlab]{*setOption}()}.
+  For more information see \code{\link{Matlab}}.
+}
+\keyword{internal}
+\keyword{methods}
