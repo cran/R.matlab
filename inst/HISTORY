@@ -2,6 +2,29 @@
 Package: R.matlab
 =================
 
+Version: 1.1.0 [2005-06-29]
+o BUG FIX: Forgot to "implement" miSINGLE, i.e. to set 'knownTypes' 
+  and 'knowWhats' for this. Thanks to Craig Aumann for the report.
+o BUG FIX: readMat() did not read 'complex' matrices in MAT v5
+  correctly.  Thanks again to Chris Sims for the bug report.
+o BUG FIX: readMat() did not read 'text' matrices in MAT v4 
+  correctly.  Thanks to Chris Sims, Princeton University, for
+  for the patch.
+o If using the Matlab class, the package requires the R.utils
+  where the classes Java and Verbose was moved. The methods for 
+  dealing with user options in the Matlab class are provided by 
+  the Options class also in R.utils. Similarily, if verbose != FALSE
+  in readMat() or writeMat(), then the R.utils package is required.
+
+Version: 1.0.3 [2005-05-26]
+o Added support for used defined options to Matlab objects via
+  methods setOption() and getOption(). Current supported options
+  are "readResult/maxTries" and "readResult/interval" to provide
+  a "workaround" for the problem with timeout errors in evaluate().
+  Thanks Thomas Romary, France, for (re-)reporting this problem.
+o Added class Options. This will probably move to another package
+  whenever it becomes stable and widely used.
+
 Version: 1.0.2 [2005-05-03]
 o Now Matlab struct's are read into an R structure.
 o BUG FIX: Reading empty struct:s (and cells) tried to read one 

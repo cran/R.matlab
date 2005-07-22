@@ -1,37 +1,19 @@
 ###########################################################################/**
 # @RdocDocumentation "Non-documented objects"
 #
-# @alias "cat"
-# @alias "cat.default"
-# @alias "evaluate"
-# @alias "getThreshold"
-# @alias "getVariable"
-# @alias "isVisible"
-# @alias "newline"
-# @alias "printf"
-# @alias "readResult"
-# @alias "ruler"
-# @alias "setFunction"
-# @alias "setThreshold"
-# @alias "setVariable"
-# @alias "setVerbose"
-# @alias "startServer"
-# @alias "writeCommand"
-#
-# @alias "asByte"
-# @alias "asInt"
-# @alias "asLong"
-# @alias "asShort"
-# @alias "isOpen"
-# @alias "isOpen.default"
-# @alias "readByte"
-# @alias "readInt"
-# @alias "readShort"
-# @alias "readUTF"
-# @alias "writeByte"
-# @alias "writeInt"
-# @alias "writeShort"
-# @alias "writeUTF"
+# @alias evaluate
+# @alias getOption
+# @alias getOption.default
+# @alias getVariable
+# @alias isOpen
+# @alias isOpen.default
+# @alias readResult
+# @alias setFunction
+# @alias setOption
+# @alias setVariable
+# @alias setVerbose
+# @alias startServer
+# @alias writeCommand
 #
 # \description{
 #   This page contains aliases for all "non-documented" objects that 

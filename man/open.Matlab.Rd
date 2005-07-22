@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:49:59 2005.
+% on Mon Jun 27 09:58:34 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.open}
 \alias{open.Matlab}
 \alias{open,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Tries to open a connection to the Matlab server}
@@ -44,3 +42,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}

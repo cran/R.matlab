@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:02 2005.
+% on Mon Jun 27 09:58:37 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.evaluate}
 \alias{evaluate.Matlab}
 \alias{evaluate,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Evaluates a Matlab expression}
@@ -26,6 +24,9 @@
 
  If an error occured in Matlab an exception will be thrown. This expection
  can be caught by \code{\link[base:conditions]{tryCatch}()}.
+
+ If you receieve error message \emph{Excepted an 'answer' from Matlab,
+ but kept receiving nothing}, see "Troubleshooting" under ?R.matlab.
 }
 
 \usage{\method{evaluate}{Matlab}(this, ..., collapse=";")}
@@ -47,3 +48,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}

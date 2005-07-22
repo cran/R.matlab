@@ -33,8 +33,14 @@
 #     If \code{NULL}, data will be read until End Of File has been reached.}
 #   \item{fixNames}{If @TRUE, names of Matlab variables and fields are 
 #     renamed such that they are valid variables names in R.}
-#   \item{verbose}{If @TRUE, debug information is written to standard output,
-#     otherwise not.}
+#   \item{verbose}{Either a @logical, a @numeric, or a @see "R.utils::Verbose"
+#     object specifying how much verbose/debug information is written to
+#     standard output. If a Verbose object, how detailed the information is
+#     is specified by the threshold level of the object. If a numeric, the
+#     value is used to set the threshold of a new Verbose object. If @TRUE, 
+#     the threshold is set to -1 (minimal). If @FALSE, no output is written
+#     (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+#   }
 #   \item{...}{Not used.}
 # }
 #
@@ -216,9 +222,13 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     name;
   }
 
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Debug functions
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   debugIndent <- 0;
   debug <- function(..., sep="") {
-    cat(paste(rep(" ", length.out=debugIndent), collapse=""));
+    if (debugIndent > 0)
+      cat(paste(rep(" ", length.out=debugIndent), collapse=""));
     cat(..., sep=sep);
     cat("\n");
   }
@@ -293,8 +303,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     if (!isMOPT)
         stop("File format error: Not a valid MAT v4. The first four bytes (MOPT) were: ", paste(MOPT, collapse=", "));
     
-    if (verbose)
-      cat("Read MOPT bytes: ", moptToString(MOPT), "\n", sep="");
+    verbose && cat(verbose, level=-50, "Read MOPT bytes: ", moptToString(MOPT));
     
     MOPT;
   } # getMOPT()
@@ -443,8 +452,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # "The column dimension contains an integer with the number of columns in the matrix."
       header$ncols  <- readBinMat(con, what=integer(), size=4, n=1)
 
-      if (verbose)
-        cat("Matrix dimension: ", header$mrows, "x", header$ncols, "\n", sep="");
+      verbose && cat(verbose, level=-50, "Matrix dimension: ", header$mrows, "x", header$ncols);
 
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # The 'imagf' fields
@@ -453,8 +461,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #  then the matrix has an imaginary part. If 0, there is only real data."
       header$imagf  <- readBinMat(con, what=integer(), size=4, n=1)
 
-      if (verbose)
-        cat("Matrix contains imaginary values: ", as.logical(header$imagf), "\n", sep="");
+      verbose && cat(verbose, level=-60, "Matrix contains imaginary values: ", as.logical(header$imagf));
 
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # The 'namelen' fields
@@ -462,8 +469,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # "The name length contains an integer with 1 plus the length of the matrix name."
       header$namlen <- readBinMat(con, what=integer(), size=4, n=1)
 
-      if (verbose)
-        cat("Matrix name length: ", header$namlen-1, "\n", sep="");
+      verbose && cat(verbose, level=-100, "Matrix name length: ", header$namlen-1);
 
       header;
     }
@@ -484,13 +490,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       name <- readCharMat(con, header$namlen);
 
-      if (verbose)
-        cat("Matrix name: '", name, "'\n", sep="");
+      verbose && cat(verbose, level=-50, "Matrix name: '", name, "'");
       
       name <- asSafeRName(name);
 
-      if (verbose)
-        cat("Matrix safe name: '", name, "'\n", sep="");
+      verbose && cat(verbose, level=-51, "Matrix safe name: '", name, "'");
 
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # The 'real' field
@@ -501,14 +505,19 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       n <- header$mrows * header$ncols;
       if (header$matrixType == "text") {
-  	data <- readCharMat(con, nchars=n);
-        data <- strsplit(data, split="");
+##  	data <- readCharMat(con, nchars=n);
+##      data <- strsplit(data, split="");
+        data <- readBinMat(con, what=header$what, size=header$size, 
+                                                     signed=header$signed, n=n);
+        data <- intToChar(data);
         
         # Make into a matrix
         dim(data) <- c(header$mrows, header$ncols);
+        data <- apply(data, MARGIN=1, FUN=paste, sep="", collapse="");
       } else if (header$matrixType %in% c("numeric", "sparse")) {
   	real <- readBinMat(con, what=header$what, size=header$size, signed=header$signed, n=n);
   	if (header$imagf != 0) {
+          verbose && cat(verbose, level=-2, "Reading imaginary part of complex data set.")
   	  imag <- readBinMat(con, what=header$what, size=header$size, signed=header$signed, n=n);
   	  data <- complex(real=real, imag=imag);
   	} else {
@@ -556,10 +565,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         stop(paste("MAT v4 file format error: Unknown 'type' in header: ", header$matrixType, sep=""));
       }
 
-      if (verbose) {
-        cat("Matrix elements:\n");
-        str(data);
-      }
+      verbose && cat(verbose, level=-60, "Matrix elements:\n");
+      verbose && str(verbose, level=-60, data);
       
       data <- list(data);
       names(data) <- name;
@@ -801,8 +808,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #   :                                       :
       #
       readTag <- function(this) {
-        if (verbose)
-          debugEnter("Reading Tag");
+        verbose && enter(verbose, level=-80, "Reading Tag");
+        on.exit(verbose && exit(verbose));
         
   	type <- readBinMat(con, what=integer(), size=4, n=1);
   	# Did we read EOF?
@@ -811,8 +818,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       
   	left <<- left - 4;
 
-        knownTypes <- c("miMATRIX"=0, "miINT8"=8, "miUINT8"=8, "miINT16"=16, "miUINT16"=16, "miINT32"=32, "miUINT32"=32, "miSINGLE"=NA, NA, "miDOUBLE"=64, NA, NA, "miINT64"=64, "miUINT64"=64, "miMATRIX"=NA);
-  	knownWhats <- list("miMATRIX"=0, "miINT8"=integer(), "miUINT8"=integer(), "miINT16"=integer(), "miUINT16"=integer(), "miINT32"=integer(), "miUINT32"=integer(), "miSINGLE"=NA, NA, "miDOUBLE"=double(), NA, NA, "miINT64"=integer(), "miUINT64"=integer(), "miMATRIX"=NA);
+        knownTypes <- c("miMATRIX"=0, "miINT8"=8, "miUINT8"=8, "miINT16"=16, "miUINT16"=16, "miINT32"=32, "miUINT32"=32, "miSINGLE"=32, NA, "miDOUBLE"=64, NA, NA, "miINT64"=64, "miUINT64"=64, "miMATRIX"=NA);
+  	knownWhats <- list("miMATRIX"=0, "miINT8"=integer(), "miUINT8"=integer(), "miINT16"=integer(), "miUINT16"=integer(), "miINT32"=integer(), "miUINT32"=integer(), "miSINGLE"=double(), NA, "miDOUBLE"=double(), NA, NA, "miINT64"=integer(), "miUINT64"=integer(), "miMATRIX"=NA);
       
   	nbrOfBytes <- NULL;
 
@@ -830,8 +837,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         rm(tmp);
         compressed <- any(bytes[3:4] != 0);
 
-        if (verbose)
-            debug("Compressed tag: ", compressed);
+        verbose && cat(verbose, level=-100, "Compressed tag: ", compressed);
 
 #  	  if (type+1 < 1 || type+1 > length(knownTypes)) {
         if (compressed) {
@@ -865,10 +871,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       
   	tag <- list(type=type, signed=signed, sizeOf=sizeOf, what=what, nbrOfBytes=nbrOfBytes, padding=padding, compressed=compressed);
         
-        if (verbose) {
-          debugPrint(unlist(tag));
-          debugExit("Reading Tag");
-        }
+        verbose && print(verbose, level=-100, unlist(tag));
         
         tag;
       } # readTag()
@@ -881,8 +884,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # Array Flags    miUINT32   2*sizeOf(miUINT32) (8 bytes)
       
       readArrayFlags <- function(this) {
-        if (verbose)
-          debugEnter("Reading Array Flags");
+        verbose && enter(verbose, level=-70, "Reading Array Flags");
+        on.exit(verbose && exit(verbose));
         
   	getBits <- function(i) {
   	  ready <- FALSE;
@@ -943,10 +946,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	
   	flags <- list(tag=tag, logical=logical, global=global, complex=complex, class=class, classSize=classSize, signed=signed, nzmax=nzmax);
 
-        if (verbose) {
-          debugPrint(unlist(flags[-1]));
-          debugExit("Reading Array Flags");
-        }
+        verbose && print(verbose, level=-100, unlist(flags[-1]));
         
         flags;
       } # readArrayFlags()
@@ -954,29 +954,24 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readDimensionsArray <- function(this) {
-        if (verbose)
-          debugEnter("Reading Dimensions Array");
+        verbose && enter(verbose, level=-70, "Reading Dimensions Array");
+        on.exit(verbose && exit(verbose));
         
   	tag <- readTag(this);
       
   	sizeOf <- tag$sizeOf %/% 8;
   	len <- tag$nbrOfBytes %/% sizeOf;
-        if (verbose)
-          debug("Reading ", len, " integers each of size ", sizeOf, " bytes.");
+        verbose && cat(verbose, level=-100, "Reading ", len, " integers each of size ", sizeOf, " bytes.");
   	dim <- readBinMat(con, what=integer(), size=sizeOf, n=len);
   	left <<- left - sizeOf*len;
   	
-        if (verbose)
-          debug("Reading ", tag$padding, " padding bytes.");
+        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
   	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
   	left <<- left - tag$padding;
   	
   	dimArray <- list(tag=tag, dim=dim);
         
-        if (verbose) {
-          debugPrint(list(dim=dim));
-          debugExit("Reading Dimensions Array");
-        }
+        verbose && print(verbose, level=-100, list(dim=dim));
         
         dimArray;
       } # readDimensionsArray()
@@ -984,28 +979,23 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readName <- function(this) {
-        if (verbose)
-          debugEnter("Reading Array Name");
+        verbose && enter(verbose, level=-70, "Reading Array Name");
+        on.exit(verbose && exit(verbose));
         
   	tag <- readTag(this);
       
   	sizeOf <- tag$sizeOf %/% 8;
   	nchars <- tag$nbrOfBytes %/% sizeOf;
-        if (verbose)
-          debug("Reading ", nchars, " characters.");
+        verbose && cat(verbose, level=-100, "Reading ", nchars, " characters.");
   	name <- readCharMat(con, nchars=nchars);
         name <- asSafeRName(name);
   	left <<- left - nchars;
       
-        if (verbose)
-          debug("Reading ", tag$padding, " padding bytes.");
+        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
   	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
   	left <<- left - tag$padding;
   	
-        if (verbose) {
-  	  debug("Name: '", name, "'");
-          debugExit("Reading Array Name");
-        }
+	verbose && cat(verbose, level=-50, "Name: '", name, "'");
         
   	list(tag=tag, name=name);
       } # readName()
@@ -1013,8 +1003,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readFieldNameLength <- function(this) {
-        if (verbose)
-          debugEnter("Reading Field Name Length");
+        verbose && enter(verbose, level=-70, "Reading Field Name Length");
+        on.exit(verbose && exit(verbose));
         
   	tag <- readTag(this);
       
@@ -1029,20 +1019,16 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
   	left <<- left - tag$padding;
       
-  	if (verbose)
-  	  debug("Field name length+1: ", maxLength);
+ 	verbose && cat(verbose, level=-100, "Field name length+1: ", maxLength);
 
-        if (verbose)
-          debugExit("Reading Field Name Length");
-        
   	list(tag=tag, maxLength=maxLength);
       } # readFieldNameLength()
       
       
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readFieldNames <- function(this, maxLength) {
-        if (verbose)
-          debugEnter("Reading Field Names");
+        verbose && enter(verbose, level=-70, "Reading Field Names");
+        on.exit(verbose && exit(verbose));
         
   	tag <- readTag(this);
       
@@ -1061,16 +1047,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  names <- c(names, name);
   	}
 
-        if (verbose)
-          debug("Reading ", tag$padding, " padding bytes.");
+        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
   	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
   	left <<- left - tag$padding;
 
-  	if (verbose)
-  	  debug("Field names: ", paste(paste("'", names, "'", sep=""), collapse=", "));
-        
-        if (verbose)
-          debugExit("Reading Field Names");
+	verbose && cat(verbose, level=-50, "Field names: ", paste(paste("'", names, "'", sep=""), collapse=", "));
         
   	list(tag=tag, names=names);
       } # readFieldNames()
@@ -1086,55 +1067,44 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #  these array type. MATLAB reads and writes these fields in
       #  column-major order."
       readFields <- function(this, names) {
-        if (verbose)
-          debugEnter("Reading Fields");
+        verbose && enter(verbose, level=-70, "Reading Fields");
+        on.exit(verbose && exit(verbose));
         
   	fields <- list();
   	for (k in seq(names)) {
-          if (verbose)
-            debugEnter("Reading field: ", names[k]);
+          verbose && enter(verbose, level=-3, "Reading field: ", names[k]);
   	  field <- readMat5DataElement(this);
   	  fields <- c(fields, field);
-          if (verbose)
-            debugExit("Reading field: ", names[k]);
+          verbose && exit(verbose);
   	}
   	names(fields) <- names;
   	
-        if (verbose)
-          debugExit("Reading Fields");
-        
   	fields;
       } # readFields()
     
     
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readValues <- function(this) {
-        if (verbose)
-          debugEnter("Reading Values");
+        verbose && enter(verbose, level=-70, "Reading Values");
+        on.exit(verbose && exit(verbose));
         
   	tag <- readTag(this);
   	sizeOf <- tag$sizeOf %/% 8;
   	len <- tag$nbrOfBytes %/% sizeOf;
 
-        if (verbose)
-          debug("Reading ", len, " values each of ", sizeOf, " bytes. In total ", tag$nbrOfBytes, " bytes.");
+        verbose && cat(verbose, level=-100, "Reading ", len, " values each of ", sizeOf, " bytes. In total ", tag$nbrOfBytes, " bytes.");
         
   	value <- readBinMat(con, what=tag$what, size=sizeOf, n=len, signed=tag$signed);
-        if (verbose)
-          debugStr(value);
+        verbose && str(verbose, level=-102, value);
         
   	left <<- left - sizeOf*len;
   	
-        if (verbose)
-          debug("Reading ", tag$padding, " padding bytes.");
+        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
         
   	padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
         
   	left <<- left - tag$padding;
   	
-        if (verbose)
-          debugExit("Reading Values");
-        
   	list(tag=tag, value=value);
       } # readValues()
     
@@ -1142,8 +1112,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       readMiMATRIX <- function(this) {
-        if (verbose)
-          debugEnter("Reading miMATRIX");
+        verbose && enter(verbose, level=-70, "Reading miMATRIX");
+        on.exit(verbose && exit(verbose));
         
   	arrayFlags <- readArrayFlags(this);
   	dimensionsArray <- readDimensionsArray(this);
@@ -1153,8 +1123,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       
   	if (arrayFlags$class == "mxCELL_CLASS") {
   	  nbrOfCells <- prod(dimensionsArray$dim);
-          if (verbose)
-            cat("Reading ", nbrOfCells, " cells.\n", sep="");
+          verbose && cat(verbose, level=-4, "Reading mxCELL_CLASS with ", nbrOfCells, " cells.");
   	  matrix <- list();
   	  for (kk in seq(length=nbrOfCells)) {
   	    tag <- readTag(this);
@@ -1165,12 +1134,10 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  names(matrix) <- arrayName$name;
   	} else if (arrayFlags$class == "mxSTRUCT_CLASS") {
   	  nbrOfCells <- prod(dimensionsArray$dim);
-          if (verbose)
-            cat("Reading ", nbrOfCells, " cells in structure.\n", sep="");
+          verbose && cat(verbose, level=-4, "Reading mxSTRUCT_CLASS with ", nbrOfCells, " cells in structure.");
   	  maxLength <- readFieldNameLength(this);
   	  names <- readFieldNames(this, maxLength=maxLength$maxLength);
-          if (verbose)
-            cat("Field names: ", paste(names$names, collapse=", "), "\n", sep="");
+          verbose && cat(verbose, level=-100, "Field names: ", paste(names$names, collapse=", "));
           nbrOfFields <- length(names$names);
   	  matrix <- list();
   	  for (kk in seq(length=nbrOfCells)) {
@@ -1195,10 +1162,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           matrix <- list(matrix);
           names(matrix) <- arrayName$name;
 
-          if (verbose) {
-            cat("Read a 'struct':\n");
-            str(matrix);
-          }
+          verbose && cat(verbose, level=-60, "Read a 'struct':");
+          verbose && str(verbose, level=-60, matrix);
+
 #old#  	  maxLength <- readFieldNameLength(this);
 #old#  	  names <- readFieldNames(this, maxLength=maxLength$maxLength);
 #old#         print(names);
@@ -1210,21 +1176,35 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	} else if (arrayFlags$class == "mxOBJECT_CLASS") {
   	  className <- readName(this)$name;
   	  maxLength <- readFieldNameLength(this);
+          verbose && cat(verbose, level=-4, "Reading mxOBJECT_CLASS of class '", className, "' with ", maxLength, " fields.");
   	  names <- readFieldNames(this, maxLength=maxLength$maxLength);
   	  fields <- readFields(this, names=names$names);
   	  class(fields) <- className;
   	  matrix <- list(fields);
   	  names(matrix) <- arrayName$name;
   	} else if (arrayFlags$complex) {
+          verbose && enter(verbose, level=-4, "Reading complex matrix.")
   	  pr <- readValues(this);
   	  if (left > 0)
   	    pi <- readValues(this);
   	  matrix <- complex(real=pr$value, imaginary=pi$value);
-  	  attr(matrix, "name") <- arrayName$name;
+
+          # Set dimension of complex matrix
+          dim(matrix) <- dimensionsArray$dim;
+          verbose && str(verbose, level=-10, matrix);
+
+          # Put into a named list
+          matrix <- list(matrix);
+          names(matrix) <- arrayName$name;
+          verbose && exit(verbose, suffix=paste("...done: '", names(matrix), "' [", 
+                   mode(matrix), ": ", paste(dim(matrix), collapse="x"),  
+                                                 " elements]", sep=""));
   	} else if (arrayFlags$class == "mxSPARSE_CLASS") {
           # Dimensions of the sparse matrix
           nrow <- dimensionsArray$dim[1];
           ncol <- dimensionsArray$dim[2];
+
+          verbose && cat(verbose, level=-4, "Reading mxSPARSE_CLASS ", nrow, "x", ncol, " matrix.");
           
           # Create expanded matrix...
           matrix <- matrix(0, nrow=nrow, ncol=ncol);
@@ -1297,11 +1277,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
               stop(paste("MAT v5 file format error: The length of vector 'pr' (sparse arrays) is not equal to 'nzmax': ", length(ir), ", ", nzmax, "."));
             }
   
-            if (verbose) {
-              debugStr(ir);
-              debugStr(jc);
-              debugStr(pr);
-            }
+            verbose && str(verbose, level=-102, ir);
+            verbose && str(verbose, level=-102, jc);
+            verbose && str(verbose, level=-102, pr);
             
             # "This subelement contains the imaginary data in the array, if one
             #  or more of the numeric values in the MATLAB array is a complex
@@ -1312,8 +1290,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
               if (length(pi) != nzmax) {
                 stop(paste("MAT v5 file format error: The length of vector 'pi' (sparse arrays) is not equal to 'nzmax': ", length(ir), ", ", nzmax, "."));
               }
-              if (verbose)
-                debugStr(pi);
+              verbose && str(verbose, level=-102, pi);
               pr <- complex(real=pr, imaginary=pi);
               rm(pi); # Not needed anymore!
             }
@@ -1345,11 +1322,13 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
             
             matrix <- list(matrix);
   	    names(matrix) <- arrayName$name;
-          }
+          } # if (nzmax > 0)
+          # End mxSPARSE_CLASS
   	} else {
   	  data <- readValues(this);
   	  matrix <- data$value;
       
+          verbose && cat(verbose, level=-5, "Converting to ", arrayFlags$class, " matrix.");
   	  if (arrayFlags$class == "mxDOUBLE_CLASS") {
   	    matrix <- as.double(matrix);
   	    dim(matrix) <- dimensionsArray$dim;
@@ -1372,9 +1351,6 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   	  names(matrix) <- arrayName$name;
   	}
       
-        if (verbose)
-          debugExit("Reading miMATRIX");
-        
   	matrix;
       } # readMiMATRIX()
     
@@ -1401,8 +1377,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
       left <<- tag$nbrOfBytes;
       if (tag$type == "miMATRIX") {
-  	data <- readMiMATRIX(this);
+        verbose && enter(verbose, level=-3, "Reading (outer) miMATRIX");
+  	data <- readMiMATRIX(this); 
+        verbose && str(verbose, level=-4, data);
+        verbose && exit(verbose);
       } else {
+        verbose && printf(verbose, level=-3, "Reading (outer) %.0f integers", tag$nbrOfBytes);
   	data <- readBinMat(con, what=integer(), size=1, n=tag$nbrOfBytes, signed=tag$signed);
       }
 
@@ -1420,18 +1400,22 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
     header <- readMat5Header(this, firstFourBytes=firstFourBytes);
 
-    if (verbose) {
-      debug("Read MAT v5 header:");
-      debugPrint(header);
-      debug("Endian: ", detectedEndian);
-    }
+    verbose && cat(verbose, level=-100, "Read MAT v5 header:");
+    verbose && print(verbose, level=-100, header);
+    verbose && cat(verbose, level=-100, "Endian: ", detectedEndian);
 
     result <- list();
     repeat {
+      verbose && enter(verbose, level=-2, "Reading data element");
       data <- readMat5DataElement(this);
-      if (is.null(data))
+      if (is.null(data)) {
+        verbose && exit(verbose);
         break;
+      }
       result <- append(result, data);
+      verbose && exit(verbose, suffix=paste("...done: '", names(data), "' [", 
+                   mode(data[[1]]), ": ", paste(dim(data[[1]]), collapse="x"), 
+                                                                "]", sep=""));
     }
 
     attr(result, "header") <- header;
@@ -1441,10 +1425,30 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # MAT v5 specific                                                        END
   #===========================================================================
 
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Validate arguments
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Argument 'verbose':
+  if (inherits(verbose, "Verbose")) {
+  } else if (is.numeric(verbose)) {
+    require(R.utils) || throw("Package not available: R.utils");
+    verbose <- Verbose(threshold=verbose);
+  } else {
+    verbose <- as.logical(verbose);
+    if (verbose) {
+      require(R.utils) || throw("Package not available: R.utils");
+      verbose <- Verbose(threshold=-1);
+    }
+  }
+
   if (inherits(con, "connection")) {
     if (!isOpen(con)) {
+      verbose && cat(verbose, level=-1, "Opens binary connection.");
       open(con, open="rb");
-      on.exit(close(con));
+      on.exit({
+        close(con);
+        verbose && cat(verbose, level=-1, "Binary connection closed.");
+      });
     }
   } else {
     # For all other types of values of 'con' make it into a character string.
@@ -1453,8 +1457,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     con <- as.character(con);
 
     # Now, assume that 'con' is a filename specifying a file to be opened.
+    verbose && cat(verbose, level=-1, "Opens binary file: ", con);
     con <- file(con, open="rb");
-    on.exit(close(con));
+    on.exit({
+      close(con);
+      verbose && cat(verbose, level=-1, "Binary file closed.");
+    });
   }
 
   # Assert that it is a binary connection that we are reading from
@@ -1479,8 +1487,10 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     stop("MAT file format error: Nothing to read. Empty input stream.");
 
   if (isMat4(firstFourBytes)) {
+    verbose && cat(verbose, level=0, "Trying to read MAT v4 file stream...");
     readMat4(con, firstFourBytes=firstFourBytes, maxLength=maxLength);
   } else {
+    verbose && cat(verbose, level=0, "Trying to read MAT v5 file stream...");
     readMat5(con, firstFourBytes=firstFourBytes, maxLength=maxLength);
   }
 }) # readMat()
@@ -1489,6 +1499,19 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 ######################################################################
 # HISTORY:
+# 2005-06-29
+# o BUG FIX: Forgot to "implement" miSINGLE, i.e. to set 'knownTypes' 
+#   and 'knowWhats' for this. Thanks to Craig Aumann for the report.
+# 2005-06-10
+# o BUG FIX: readMat() would not read complex matrices correctly;
+#   each element in a complex matrix was made into its own variable
+#   with name "". Thanks to Chris Sims at Princeton University for 
+#   reporting this.
+# o Now making use of the Verbose() class. Sorry, but this means
+#   if verbose != FALSE, the function requires Verbose in R.utils.
+# 2005-06-08
+# o BUG FIX: readMat4Data() did not read 'text' matrices correctly.
+#   Thanks to Chris Sims, Princeton University, for the patch.
 # 2005-05-02
 # o Updated such that multidimensional (not only one and two dims)
 #   Matlab struct:s can be read.

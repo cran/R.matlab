@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:49:37 2005.
+% on Mon Jun 27 09:58:25 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -11,7 +11,6 @@
 
 \name{. About the Matlab server}
 \alias{. About the Matlab server}
-\keyword{documentation}
 \title{. About the Matlab server}
 
 \alias{MatlabServer}
@@ -408,3 +407,4 @@ public class InputStreamByteWrapper {
 
  }\emph{}
 }
+\keyword{documentation}

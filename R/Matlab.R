@@ -143,12 +143,16 @@
 # @visibility public
 #*/###########################################################################
 setConstructorS3("Matlab", function(host="localhost", port=9999, remote=!(host %in% c("localhost", "127.0.0.1"))) {
+  # By loading R.utils here, it is not required if only readMat() is used.
+  require(R.utils) || throw("Package not available: R.utils");
+
   extend(Object(), "Matlab",
     con      = NULL,
     host     = as.character(host),
     port     = as.integer(port),
     remote   = as.logical(remote),
-    .verbose = NULL
+    .options = Options(),
+    .verbose = NullVerbose()
   )
 })
 
@@ -192,6 +196,71 @@ setMethodS3("as.character", "Matlab", function(this, ...) {
 
 
 ###########################################################################/**
+# @RdocMethod getOption
+#
+# @title "Gets the value of an option"
+#
+# \description{
+#   @get "title" where the option is specified like a file pathname, e.g.
+#   "readResult/maxTries". See the \link[R.utils]{Options} class for details.
+# }
+#
+# @synopsis
+#
+# \arguments{
+#  \item{...}{Arguments passed to \code{\link[R.utils:getOption.Options]{getOption()}}
+#    of the Options class.}
+# }
+#
+# \value{
+#   Returns the value of the option.
+# }
+#
+# @author
+#
+# \seealso{
+#   @seemethod "setOption".
+#   @seeclass
+# }
+#*/###########################################################################
+setMethodS3("getOption", "Matlab", function(this, ...) {
+  getOption(this$.options, ...);
+})
+
+
+###########################################################################/**
+# @RdocMethod setOption
+#
+# @title "Sets the value of an option"
+#
+# \description{
+#   @get "title" where the option is specified like a file pathname, e.g.
+#   "readResult/maxTries". See the \link[R.utils]{Options} class for details.
+# }
+#
+# @synopsis
+#
+# \arguments{
+#  \item{...}{Arguments passed to \code{\link[Rutils:getOption.Options]{setOption()}} of the Options class.}
+# }
+#
+# \value{
+#   Returns the previous value of the option.
+# }
+#
+# @author
+#
+# \seealso{
+#   @seemethod "getOption".
+#   @seeclass
+# }
+#*/###########################################################################
+setMethodS3("setOption", "Matlab", function(this, ...) {
+  setOption(this$.options, ...);
+})
+
+
+###########################################################################/**
 # @RdocMethod open
 #
 # @title "Tries to open a connection to the Matlab server"
@@ -222,16 +291,19 @@ setMethodS3("as.character", "Matlab", function(this, ...) {
 # }
 #*/###########################################################################
 setMethodS3("open", "Matlab", function(con, trials=30, interval=1, ...) {
+  # To please R CMD check.
   # close() is already a generic function in 'base'.
   this <- con;
+
+  enter(this$.verbose, sprintf("Opens a blocked connection to host '%s' (port %d)", this$host, as.integer(this$port)));
+  suffix <- "...done";
+  on.exit(exit(this$.verbose, suffix=suffix), add=TRUE);
 
   count <- 0;
   while (count < trials) {
     ok <- FALSE;
     tryCatch({
-      if (!is.null(this$.verbose)) {
-        printf(this$.verbose, level=-1, "Opens a blocked socket connection to host '%s' and port %d. Try %d.\n", this$host, as.integer(this$port), as.integer(count));
-      }
+      printf(this$.verbose, level=-1, "Try #%d.\n", as.integer(count));
       this$con <- socketConnection(host=this$host, port=as.integer(this$port), open="a+b", blocking=TRUE);
       ok <- TRUE;
       # It is not possible to return() from tryCatch()! /HB 050224
@@ -243,18 +315,13 @@ setMethodS3("open", "Matlab", function(con, trials=30, interval=1, ...) {
     })
 
     if (ok) {
-      if (!is.null(this$.verbose)) {
-        printf(this$.verbose, level=0, "Opened a blocked socket connection to host '%s' and port %d. Tried %d times.\n", this$host, as.integer(this$port), as.integer(count));
-      }
-
       # Connection to Matlab server was successful!
       return(TRUE);
     }
   } # while (count < trials)
 
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Failed to open a blocked socket connection to host '%s' and port %d. Tried %d times.\n", this$host, as.integer(this$port), as.integer(count));
-  }
+  suffix <- sprintf("...failed (after %d tries)", as.integer(count));
+
   return(FALSE);
 });
 
@@ -325,9 +392,9 @@ setMethodS3("isOpen", "Matlab", function(con, ...) {
 # }
 #*/###########################################################################
 setMethodS3("finalize", "Matlab", function(this, ...) {
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-2, "Finalizing the Matlab object.\n");
-  }
+  enter(this$.verbose, level=-100, "Finalizing the Matlab object");
+  on.exit(exit(this$.verbose), add=TRUE);
+
   close(this);
 })
 
@@ -363,38 +430,31 @@ setMethodS3("close", "Matlab", function(con, ...) {
   # close() is already a generic function in 'base'.
   this <- con;
 
+  enter(this$.verbose, sprintf("Closing connection to host '%s' (port %d)", this$host, as.integer(this$port)));
+  suffix <- "...done";
+  on.exit(exit(this$.verbose, suffix=suffix), add=TRUE);
+
   if (isOpen(this)) {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Sending a command to the Matlab server telling it to close down...\n");
-    }
+    printf(this$.verbose, level=-2, "Sending a command to the Matlab server telling it to close down...\n");
+
     writeCommand(this, "quit");
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Sending a command to the Matlab server telling it to close down...ok\n");
-    }
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Waiting for a reply from the Matlab server...\n");
-    }
+    printf(this$.verbose, level=-2, "Sending a command to the Matlab server telling it to close down...ok\n");
+
+    printf(this$.verbose, level=-2, "Waiting for a reply from the Matlab server...\n");
+
     res <- readResult(this);
-    if (!is.null(this$.verbose)) {
-      resStr <- res;
-      if (is.null(res)) resStr <- 0;
-      printf(this$.verbose, level=-1, "Waiting for a reply from the Matlab server...ok: '%d'\n", as.integer(resStr));
-    }
+    resStr <- if (is.null(res)) 0 else res;
+    printf(this$.verbose, level=-2, "Waiting for a reply from the Matlab server...ok: '%d'\n", as.integer(resStr));
+
     if (!is.null(res)) {
       warning(res);
     }
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Closing the connection to the Matlab server...\n");
-    }
+    printf(this$.verbose, level=-2, "Closing the connection to the Matlab server...\n");
     close(this$con);
     this$con <- NULL;
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Closing the connection to the Matlab server...ok\n");
-    }
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=0, "Closed the connection to the Matlab server.\n");
-    }
+    printf(this$.verbose, level=-2, "Closing the connection to the Matlab server...ok\n");
   } else if (!is.null(this$con)) {
+   suffix <- "...already closed";
    warning("Matlab session is already closed.");
   }
 });
@@ -439,15 +499,11 @@ setMethodS3("writeCommand", "Matlab", function(this, cmd, ...) {
 
   b <- getCommandByte(this, cmd);
   
-  if (!is.null(this$.verbose)) {
-   printf(this$.verbose, level=-1, "Sending a command '%s' (%d) to the Matlab server...\n", cmd, as.integer(b));
-  }
+  printf(this$.verbose, level=-2, "Sending a command '%s' (%d) to the Matlab server...\n", cmd, as.integer(b));
   
   res <- Java$writeByte(this$con, b);
   
-  if (!is.null(this$.verbose)) {
-   printf(this$.verbose, level=-1, "Sending a command '%s' (%d) to the Matlab server...ok\n", cmd, as.integer(b));
-  }
+  printf(this$.verbose, level=-2, "Sending a command '%s' (%d) to the Matlab server...ok\n", cmd, as.integer(b));
   
   res;
 }, private=TRUE);
@@ -490,40 +546,41 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
   # other words, if we try again a little bit later it seems to work.
   # This is should be considered a temporary work-around until we
   # understand what really happens. /HB 2004-02-24
-  MAX.COUNT <- 30;
+  # Thomas Romary, France, reported the a similar problem on 2005-05-25
+  # for his 30 minutes Matlab process. Added the option for users to set
+  # the number times and at what intervals (in sections) readResult()
+  # should query Matlab for. /HB 2005-05-25
+  maxTries <- getOption(this, "readResult/maxTries", defaultValue=30);
+  interval <- getOption(this, "readResult/interval", defaultValue=1);
+
   count <- 0;
   ready <- FALSE;
   while (!ready) {
     count <- count + 1;
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-2, "Retrieve reply from the Matlab server (try %d)...\n", as.integer(count));
-    }
+    printf(this$.verbose, level=-2, "Retrieve reply from the Matlab server (try %d)...\n", as.integer(count));
+
     answer <- Java$readByte(this$con);
     ready <- (length(answer) > 0);
     if (!ready) {
-      if (!is.null(this$.verbose)) {
-        printf(this$.verbose, level=-2, "Strange! Received an \"empty\" reply although the connection should be blocking. Will try again...\n");
+      printf(this$.verbose, level=-2, "Strange! Received an \"empty\" reply although the connection should be blocking. Will try again...\n");
+      if (count <= maxTries) {
+        Sys.sleep(interval);
+      } else {
+        throw("Excepted an 'answer' from Matlab, but kept receiving nothing. Tried ", maxTries, " times at intervals of approximately ", interval, " seconds. To change this, see ?setOption.Matlab.");
       }
-      if (count == MAX.COUNT)
-        throw("Excepted an 'answer' from Matlab, but kept receiving nothing.");
     }
   }
 
   if (answer == 0) {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Received an 'OK' reply (%d) from the Matlab server.\n", answer);
-    }
+    printf(this$.verbose, level=-1, "Received an 'OK' reply (%d) from the Matlab server.\n", answer);
+
     res <- NULL;
   } else if (answer == -1) {
     lasterr <- Java$readUTF(this$con);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Received an 'MatlabException' reply (%d) from the Matlab server: '%s'\n", answer, as.character(lasterr));
-    }
+    printf(this$.verbose, level=-1, "Received an 'MatlabException' reply (%d) from the Matlab server: '%s'\n", answer, as.character(lasterr));
     throw("MatlabException: ", lasterr);
   } else {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Received an generic reply from the Matlab server: %d\n", answer);
-    }
+    printf(this$.verbose, level=-1, "Received an generic reply from the Matlab server: %d\n", answer);
     res <- answer;
   }
   res;
@@ -587,10 +644,12 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 # }
 #*/###########################################################################
 setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), minimize=TRUE, ...) {
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Starting the Matlab server...\n");
-  }
-  
+  # By loading R.utils here, it is not required if only readMat() is used.
+  require(R.utils) || throw("Package not available: R.utils");
+
+  enter(this$.verbose, "Starting the Matlab server");
+  on.exit(exit(this$.verbose), add=TRUE);
+
   # Make sure MatlabServer.m, InputStreamByteWrapper.class, and
   # InputStreamByteWrapper.java exist in the current directory, otherwise
   # create copies of them in the current directory.
@@ -598,39 +657,27 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   if (!file.exists(filename)) {
     src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
   } else {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
   }
   
   filename <- "InputStreamByteWrapper.class";
   if (!file.exists(filename)) {
     src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
   } else {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
   }
   
   filename <- "InputStreamByteWrapper.java";
   if (!file.exists(filename)) {
     src <- system.file("externals", filename, package="R.matlab");
     file.copy(src, filename, overwrite=FALSE);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file copied: '%s'\n", filename);
   } else {
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
   }
   
   cmd <- matlab;
@@ -649,18 +696,12 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
 
   cmd <- paste(cmd, " ", options, sep="");
 
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Matlab server start command: '%s'\n", cmd);
-  }
+  printf(this$.verbose, level=-1, "Matlab server start command: '%s'\n", cmd);
 
   if (OST == "windows") {
     res <- system(cmd, wait=FALSE);
   } else {
     res <- system(cmd);
-  }
-  
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Starting the Matlab server...done\n");
   }
   
   res;
@@ -681,6 +722,9 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
 #
 #  If an error occured in Matlab an exception will be thrown. This expection
 #  can be caught by \code{\link[base:conditions]{tryCatch}()}.
+#
+#  If you receieve error message \emph{Excepted an 'answer' from Matlab, 
+#  but kept receiving nothing}, see "Troubleshooting" under ?R.matlab.
 # }
 #
 # @synopsis
@@ -706,20 +750,16 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
 setMethodS3("evaluate", "Matlab", function(this, ..., collapse=";") {
   expr <- paste(..., collapse=collapse);
   
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Sending expression on the Matlab server to be evaluated...: '%s'\n", expr);
-  }
+  printf(this$.verbose, level=0, "Sending expression on the Matlab server to be evaluated...: '%s'\n", expr);
   
   writeCommand(this, "eval");
   Java$writeUTF(this$con, expr);
 
   res <- readResult(this);
 
-  if (!is.null(this$.verbose)) {
-    resStr <- res;
-    if (is.null(res)) resStr <- 0;
-    printf(this$.verbose, level=0, "Evaluated expression on the Matlab server with return code %d.\n", as.integer(resStr));
-  }
+  resStr <- if (is.null(res)) 0 else res;
+  printf(this$.verbose, level=0, "Evaluated expression on the Matlab server with return code %d.\n", as.integer(resStr));
+
   
   invisible(res);
 })
@@ -766,9 +806,7 @@ setMethodS3("getVariable", "Matlab", function(this, variables, remote=this$remot
   vars <- paste("'", variables, "'", sep="");
   vars <- paste(vars, collapse=", ");
 
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Retrieving variables from the Matlab server: %s\n", vars);
-  }
+  printf(this$.verbose, level=0, "Retrieving variables from the Matlab server: %s\n", vars);
 
   expr <- paste("variables = {", vars, "};", sep="");
   answer <- evaluate(this, expr);
@@ -777,41 +815,34 @@ setMethodS3("getVariable", "Matlab", function(this, variables, remote=this$remot
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     # Communication of data via the file system
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Asks the Matlab server to send variables via the local file system...\n");
-    }
+    printf(this$.verbose, level=-1, "Asks the Matlab server to send variables via the local file system...\n");
+
     writeCommand(this, "send");
     filename <- Java$readUTF(this$con);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Reading variables from the local MAT file '%s'...\n", filename);
-    }
+    printf(this$.verbose, level=-1, "Reading variables from the local MAT file '%s'...\n", filename);
+
     data <- readMat(filename);
   } else {
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     # Communication of data via data stream
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Asks the Matlab server to send variables via the socket connection...\n");
-    }
+    printf(this$.verbose, level=-1, "Asks the Matlab server to send variables via the socket connection...\n");
+
     writeCommand(this, "send-remote");
     maxLength <- Java$readInt(this$con);
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Will read a MAT file of length %.0f bytes...", maxLength);
-    }
+    printf(this$.verbose, level=-1, "Will read a MAT file of length %.0f bytes...", maxLength);
+
     if (maxLength == -1) {
       lasterr <- Java$readUTF(this$con);
       throw("MatlabException: ", lasterr);
     }
     data <- readMat(this$con, maxLength=maxLength);
   }
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Retrieved the variables via a MAT file structure:\n");
-    str(this$.verbose, level=0, data);
-  }
+  printf(this$.verbose, level=0, "Retrieved the variables via a MAT file structure:\n");
+  str(this$.verbose, level=0, data);
 
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Replying to the Matlab server that the data was retrieve successfully: 0\n");
-  }
+  printf(this$.verbose, level=-1, "Replying to the Matlab server that the data was retrieve successfully: 0\n");
+
   Java$writeByte(this$con, 0);
 
   data;
@@ -851,30 +882,25 @@ setMethodS3("getVariable", "Matlab", function(this, variables, remote=this$remot
 # }
 #*/###########################################################################
 setMethodS3("setVariable", "Matlab", function(this, ..., remote=this$remote) {
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Sends R variables to the Matlab server: %s\n", paste(paste("'", names(list(...)), "'", sep=""), collapse=", "));
-  }
+  printf(this$.verbose, level=-1, "Sends R variables to the Matlab server: %s\n", paste(paste("'", names(list(...)), "'", sep=""), collapse=", "));
+  enter(this$.verbose, "Setting Matlab variable on server");
+  on.exit(exit(this$.verbose), add=TRUE);
   
   if (remote == FALSE) {
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     # Communication of data via the file system
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Sends R variables to the Matlab server via the local file system...\n");
-    }
+    printf(this$.verbose, level=-1, "Sends R variables to the Matlab server via the local file system...\n");
+
     # Write to file first to get file size...
     tmpname <- paste(tempfile(), ".mat", sep="");
     on.exit(unlink(tmpname));
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Writes R variables to the MAT file '%s'...\n", tmpname);
-    }
+    printf(this$.verbose, level=-1, "Writes R variables to the MAT file '%s'...\n", tmpname);
+
     writeMat(tmpname, ...);  # Write first and then tell Matlab to read.
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Writes R variables to the MAT file '%s'...ok\n", tmpname);
-    }
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Tells the Matlab server where to find the MAT file.\n");
-    }
+    printf(this$.verbose, level=-1, "Writes R variables to the MAT file '%s'...ok\n", tmpname);
+    printf(this$.verbose, level=-1, "Tells the Matlab server where to find the MAT file.\n");
+
     writeCommand(this, "receive");
     Java$writeUTF(this$con, tmpname);
   } else {
@@ -886,9 +912,8 @@ setMethodS3("setVariable", "Matlab", function(this, ..., remote=this$remote) {
     # Matlab, otherwise an error will be given in Matlab, but not before this
     # command is sent.
 
-    if (!is.null(this$.verbose)) {
-      printf(this$.verbose, level=-1, "Sends R variables to the Matlab server via the socket connection...\n");
-    }
+    printf(this$.verbose, level=-1, "Sends R variables to the Matlab server via the socket connection...\n");
+
     writeCommand(this, "receive-remote");
     # Note the usage of onWrite to write the length before sending the
     # MAT file structure.
@@ -896,13 +921,10 @@ setMethodS3("setVariable", "Matlab", function(this, ..., remote=this$remote) {
   }
 
   # Wait for Matlab to tell if it received the variables sucessfully or not.
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Waits for the Matlab server to reply...\n");
-  }
+  printf(this$.verbose, level=-1, "Waits for the Matlab server to reply...\n");
+
   answer <- Java$readByte(this$con);
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Received a reply from the Matlab server: %d\n", answer);
-  }
+  printf(this$.verbose, level=-1, "Received a reply from the Matlab server: %d\n", answer);
   
   invisible(answer);
 });
@@ -944,9 +966,10 @@ setMethodS3("setVariable", "Matlab", function(this, ..., remote=this$remote) {
 # }
 #*/###########################################################################
 setMethodS3("setFunction", "Matlab", function(this, code, name=NULL, collapse="\n", ...) {
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Building Matlab source code for the function to be passed to the Matlab server...\n");
-  }
+  enter(this$.verbose, "Setting Matlab function on server");
+  on.exit(exit(this$.verbose), add=TRUE);
+
+  printf(this$.verbose, level=-1, "Building Matlab source code for the function to be passed to the Matlab server...\n");
   code <- paste(code, collapse=collapse);
   
   pos <- regexpr("^[ \t\n\r\v]*function[^=]*=[^ \t\n\r\v(]", code);
@@ -964,20 +987,14 @@ setMethodS3("setFunction", "Matlab", function(this, code, name=NULL, collapse="\
     name <- substring(code, nameStart, nameStop);
   }
 
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=-1, "Building Matlab source code for the function to be passed to the Matlab server...ok\n");
-    printf(this$.verbose, level=-2, "Function name: %s\n", name);
-    str(this$.verbose, level=-2, code);
-  }
+  printf(this$.verbose, level=-1, "Building Matlab source code for the function to be passed to the Matlab server...done\n");
+  printf(this$.verbose, level=-2, "Function name: %s\n", name);
+  str(this$.verbose, level=-2, code);
   
   filename <- paste(name, ".m", sep="");
   setVariable(this, fcndef=list(name=name, filename=filename, code=code));
   expr <- "fid = fopen(fcndef.filename, 'w'); fprintf(fid, '%s', fcndef.code); fclose(fid); rehash;";
   res <- evaluate(this, expr);
-  
-  if (!is.null(this$.verbose)) {
-    printf(this$.verbose, level=0, "Created a Matlab function on the Matlab server.\n");
-  }
 });
 
 
@@ -1024,15 +1041,19 @@ setMethodS3("setFunction", "Matlab", function(this, code, name=NULL, collapse="\
 # }
 #*/###########################################################################
 setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
-  oldVerbose <- this$.verbose;
-  
+  verbose <- this$.verbose;
+  oldThreshold <- getThreshold(verbose);
+ 
   if (identical(threshold, FALSE)) {
-    this$.verbose <- NULL;
+    verbose <- NullVerbose();
   } else {
-    this$.verbose <- Verbose(threshold=threshold);
+    verbose <- Verbose();
   }
+  setThreshold(verbose, threshold);
 
-  invisible(oldVerbose$threshold);
+  this$.verbose <- verbose;
+
+  invisible(oldThreshold);
 })
 
 
@@ -1041,6 +1062,12 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2005-06-10
+# o Now R.utils is loaded by the constructor and all static methods.
+# 2005-06-09
+# o Now making use of the new NullVerbose() class.
+# 2005-05-26
+# o Modified setVerbose() slighty.
 # 2005-05-03
 # o Moved "external" files such as MatlabServer.m to inst/externals/.
 # 2005-02-24

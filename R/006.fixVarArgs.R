@@ -2,7 +2,7 @@
 # turned into default functions by setMethodS3().
 
 isOpen <- appendVarArgs(isOpen)
-
+getOption <- appendVarArgs(getOption)
 
 ############################################################################
 # HISTORY:

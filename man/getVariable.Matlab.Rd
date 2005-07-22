@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:02 2005.
+% on Mon Jun 27 09:58:38 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.getVariable}
 \alias{getVariable.Matlab}
 \alias{getVariable,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Gets one or several Matlab variables}
@@ -47,3 +45,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}

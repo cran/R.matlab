@@ -3,7 +3,7 @@
 % 
 %  
 % 
-% on Tue May 03 15:50:01 2005.
+% on Mon Jun 27 09:58:36 2005.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
 % by Henrik Bengtsson, 2001-2004.
@@ -14,8 +14,6 @@
 \alias{Matlab.writeCommand}
 \alias{writeCommand.Matlab}
 \alias{writeCommand,Matlab-method}
-\keyword{methods}
-\keyword{internal}
 
 
 \title{Writes (sends) a command to the Matlab server}
@@ -41,3 +39,5 @@
 \seealso{
   For more information see \code{\link{Matlab}}.
 }
+\keyword{internal}
+\keyword{methods}
