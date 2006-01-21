@@ -3,10 +3,10 @@
 % 
 %  
 % 
-% on Mon Jun 27 09:58:34 2005.
+% on Mon Apr 03 17:31:30 2006.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2004.
+% by Henrik Bengtsson, 2001-2006.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \name{getOption.Matlab}
@@ -26,7 +26,8 @@
 \usage{\method{getOption}{Matlab}(this, ...)}
 
 \arguments{
- \item{...}{Arguments passed to \code{\link[R.utils:getOption.Options]{getOption()}}
+ \item{...}{Arguments passed to
+   \code{\link[R.utils:getOption.Options]{getOption}}()
    of the Options class.}
 }
 
@@ -34,7 +35,7 @@
   Returns the value of the option.
 }
 
-\author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
 \seealso{
   \code{\link[R.matlab:setOption.Matlab]{*setOption}()}.

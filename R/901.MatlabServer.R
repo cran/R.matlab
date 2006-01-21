@@ -1,6 +1,5 @@
 #########################################################################/**
-# @RdocDocumentation ". About the Matlab server"
-# @alias MatlabServer
+# @RdocDocumentation "1. The Matlab server running in Matlab"
 #
 # \description{
 #  This section gives addition details on the Matlab server.

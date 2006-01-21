@@ -2,6 +2,15 @@
 Package: R.matlab
 =================
 
+Version: 1.1.1 [2006-01-21]
+o Added argument 'port' to Matlab$startServer(..., port=NULL) to
+  start the Matlab server such that it listens to another port than
+  the default 9999.  Internally the server first tries to obtain
+  the port number by environment variable 'MATLABSERVER_PORT'.
+  This feature was requested by Wang Yu at Iowa State University.
+o Another version has been added to the list of Matlab versions that
+  are confirmed to work with R.matlab. See ?Matlab.
+
 Version: 1.1.0 [2005-06-29]
 o BUG FIX: Forgot to "implement" miSINGLE, i.e. to set 'knownTypes' 
   and 'knowWhats' for this. Thanks to Craig Aumann for the report.

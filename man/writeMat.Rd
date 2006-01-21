@@ -3,10 +3,10 @@
 % 
 %  
 % 
-% on Mon Jun 27 09:58:41 2005.
+% on Mon Apr 03 17:31:31 2006.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2004.
+% by Henrik Bengtsson, 2001-2006.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \name{writeMat}
@@ -42,7 +42,7 @@
     is specified by the threshold level of the object. If a numeric, the
     value is used to set the threshold of a new Verbose object. If \code{\link[base:logical]{TRUE}},
     the threshold is set to -1 (minimal). If \code{\link[base:logical]{FALSE}}, no output is written
-    (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+    (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
   }
 
   Note that \code{...} must \emph{not} contain variables with names equal
@@ -66,7 +66,6 @@ print(data)
 
 unlink(filename)
 
-
 \dontrun{
 # When writing to a stream connection the receiver needs to know in
 # beforehand how many bytes are available. This can be done by using
@@ -77,7 +76,7 @@ writeMat(con, A=A, B=B, onWrite=onWrite)
 }
 }
 
-\author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
 \seealso{
   \code{\link{readMat}}().

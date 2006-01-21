@@ -1,10 +1,10 @@
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # This example will try to connect to the Matlab server running on the
-# same machine. 
+# same machine, e.g. Matlab$startServer(port=9998)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Create a Matlab client
-matlab <- Matlab(host="localhost")
+matlab <- Matlab(host="localhost", port=9998)
 
 # Connect to the Matlab server
 if (!open(matlab))
@@ -15,7 +15,7 @@ res <- evaluate(matlab, "A=1+2;", "B=ones(2,20);")
 
 # Get Matlab variables
 data <- getVariable(matlab, c("A", "B"))
-cat("Recieved variables:\n")
+cat("Received variables:\n")
 str(data)
 
 # Set variables in Matlab
@@ -25,7 +25,7 @@ setVariable(matlab, ABCD=ABCD)
 
 # Retrieve what we just set
 data <- getVariable(matlab, "ABCD")
-cat("Recieved variables:\n")
+cat("Received variables:\n")
 str(data)
 
 # Create a function (M-file) on the Matlab server

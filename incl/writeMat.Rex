@@ -8,4 +8,3 @@ data <- readMat(filename)
 print(data)
 
 unlink(filename)
-
