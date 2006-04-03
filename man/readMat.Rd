@@ -3,10 +3,10 @@
 % 
 %  
 % 
-% on Mon Jun 27 09:58:40 2005.
+% on Mon Apr 03 17:31:31 2006.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2004.
+% by Henrik Bengtsson, 2001-2006.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \name{readMat}
@@ -51,7 +51,7 @@
     is specified by the threshold level of the object. If a numeric, the
     value is used to set the threshold of a new Verbose object. If \code{\link[base:logical]{TRUE}},
     the threshold is set to -1 (minimal). If \code{\link[base:logical]{FALSE}}, no output is written
-    (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+    (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
   }
   \item{...}{Not used.}
 }
@@ -94,7 +94,7 @@ for (version in 4:5) {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Verify that sparse matrices are read the same way in MAT v4 and MAT v5
+# Assert that sparse matrices are read identically in MAT v4 and v5
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 mat4 <- readMat(file.path(path, "SparseMatrix3-v4.mat"))
 mat5 <- readMat(file.path(path, "SparseMatrix3-v5.mat"))
@@ -103,7 +103,7 @@ if (diff > .Machine$double.eps)
   stop("Failed to read identical MAT v4 and MAT v5 sparse matrices.")
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Assert that signed and unsigned integer sare read correctly
+# Assert that signed and unsigned integers are read correctly
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bs <- readMat(file.path(path, "unsignedByte.mat"))
 if (!identical(as.vector(bs$A), as.double(126:255)))

@@ -1,6 +1,5 @@
 #########################################################################/**
-# @RdocAbout
-# @alias R.matlab
+# @RdocPackage R.matlab
 #
 # \description{
 #   @eval "getDescription(R.matlab)"
@@ -20,18 +19,18 @@
 #
 # \section{Requirements}{
 #   This is a cross-platform package implemented in plain \R.
-#   This package depends on the packages 
-#   \link[R.oo:._About_this_package]{R.oo} [1].
+#   This package depends on the \pkg{R.oo} package [1].
 #
 #   To use the Matlab class or requesting verbose output messages, the 
-#   \link[R.utils:._About_this_package]{R.utils} package is loaded 
+#   \link[R.utils:R.utils-package]{R.utils} package is loaded 
 #   when needed (and therefore required at in those cases).
 #
 #   The \code{readMat()} and \code{writeMat()} methods do \eqn{not} require a 
 #   Matlab installation neither do they depend on the Matlab class.
 #
 #   To connect to Matlab, Matlab v6 or higher is required.
-#   It does \emph{not} work with Matlab v5 or before.
+#   It does \emph{not} work with Matlab v5 or before (because there those 
+#   version does not support Java).
 #   For confirmed Matlab versions, see @see help on the "Matlab" class.
 # }
 #
@@ -40,10 +39,9 @@
 #
 #   \code{install.packages("R.matlab")}
 #
-#   Required packages are installed in the same way.  To update, do
-#   \code{update.packages()}.  To get the "devel" version, add argument
-#   \code{contriburl="@eval "getContribUrl(R.matlab)""} to the above 
-#   commands. 
+#   Required packages are installed in the same way.  
+#
+#   To get the "devel" version, see \url{http://www.braju.com/R/}.
 # }
 #
 # \section{To get started}{
@@ -81,7 +79,7 @@
 #   }
 #   The lower the threshold is the more information you will see.\cr
 #
-#   \bold{Excepted an 'answer' from Matlab, but kept receiving nothing.}:\cr
+#   \bold{Expected an 'answer' from Matlab, but kept receiving nothing.}:\cr
 #     When spawning a really long Matlab process by \code{evaluate()}, you
 #   may get the above error message.\cr
 #   \emph{Reason:} This happens because \code{evaluate()} expect a reply 
@@ -108,14 +106,11 @@
 #          it in the current directory or to the Desktop.
 #          Maybe it is possible to do this upon installation and
 #          even to a Start -> All Programs -> R menu.
-#    \item Update the MatlabServer.m script to allow the user to 
-#          specify, say from the command line, the port to connect to.
-#          This would improve security a little bit.
 #    \item To improve security, update the MatlabServer.m script to
 #          allow the user to specify a "password" to be send upon
 #          connection from R in order for Matlab to accept the 
 #          connection. This password should be possible to specify
-#          from the command line when start Matlab. If not given,
+#          from the command line when starting Matlab. If not given,
 #          no password is required. 
 #    \item Add additional methods to the Matlab class. For instance,
 #          inline function in Matlab could have its own method.
@@ -125,7 +120,7 @@
 #          that required arguments are automatically detected?
 #    \item Add support for reading (and writing) sparse matrices
 #          to be represented by the sparse matrix class defined in
-#          \code{SparseM} package.
+#          the \code{SparseM} package.
 #    \item Add access to Matlab variables via \code{"$"} and 
 #          \code{"$<-"}, e.g. \code{matlab$A} and 
 #          \code{matlab$A <- 1234}. Is this wanted?
@@ -145,6 +140,7 @@
 #    \item Andy Jacobson, Atmospheric and Oceanic Sciences Program,
 #          Princeton University. 
 #    \item Chris Sims, Department of Economics, Princeton University.
+#    \item Wang Yu, ECE Department, Iowa State University.
 #    \item Yichun Wei, Department of Biological Sciences, 
 #          University of Southern California.
 #   }
@@ -163,12 +159,8 @@
 # @author
 #
 # \section{References}{
-# [1] Henrik Bengtsson, \emph{The R.oo package - Object-Oriented Programming
-#     with References Using Standard R Code}, In Kurt Hornik, Friedrich
-#     Leisch and Achim Zeileis, editors, Proceedings of the 3rd
-#     International Workshop on Distributed Statistical Computing
-#     (DSC 2003), March 20-22, Vienna, Austria. 
-#     \url{http://www.ci.tuwien.ac.at/Conferences/DSC-2003/Proceedings/} \cr
+# [1] @include "../incl/BengtssonH_2003.bib.Rdoc" \cr
+#
 # [2] Henrik Bengtsson, 
 #     \emph{R.matlab - Local and remote Matlab connectivity in R},
 #     Mathematical Statistics, Centre for Mathematical Sciences, 

@@ -30,7 +30,7 @@
 #     is specified by the threshold level of the object. If a numeric, the
 #     value is used to set the threshold of a new Verbose object. If @TRUE, 
 #     the threshold is set to -1 (minimal). If @FALSE, no output is written
-#     (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+#     (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
 #   }
 #
 #   Note that \code{...} must \emph{not} contain variables with names equal
@@ -43,7 +43,7 @@
 #   any onWrite function are \emph{not} included in this count.
 # }
 #
-# \examples{@include "writeMat.Rex"
+# \examples{@include "../incl/writeMat.Rex"
 # \dontrun{
 # # When writing to a stream connection the receiver needs to know in
 # # beforehand how many bytes are available. This can be done by using

@@ -3,10 +3,10 @@
 % 
 %  
 % 
-% on Mon Jun 27 09:58:33 2005.
+% on Mon Apr 03 17:31:30 2006.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2004.
+% by Henrik Bengtsson, 2001-2006.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  \name{Matlab}
@@ -100,7 +100,32 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clone, detach, equals, ex
    is \emph{not} needed.
  }
 
- \section{Starting the Matlab server}{
+ \section{Starting the Matlab server from within \R}{
+   The Matlab server may be started from within \R by
+   calling \code{Matlab$startServer()}. By default 'matlab' is called;
+   if named differently set \code{options(matlab="matlab6.5")}, say.
+   \emph{The method is experimental and may not work on your system.}
+   By default the Matlab server listens for connections on port 9999.
+   For other ports, set argument \code{port}, e.g.
+   \code{Matlab$startServer(port=9998)}.
+
+   Note that the code will \emph{not} halt and wait for Matlab to get
+   started. Thus, you have to make sure you will wait long enough for
+   the server to get up and running before the \R client try to
+   connect. By default, the client will try once a second for 30 seconds
+   before giving up.
+   Moreover, on non-Windows systems, the above command will start Matlab
+   in the background making all Matlab messages be sent to the \R output
+   screen.
+   In addition, the method will copy the MatlabServer and
+   InputStreamByteWrapper files to the current directory and start
+   Matlab from there.
+ }
+
+ \section{Starting the Matlab server without \R}{
+   If the above does not work, the Matlab server may be started manually
+   from Matlab itself.  Please follow the below instructions carefully.
+
    \bold{To be done once:}\cr
    In Matlab, add the path to the directory where MatlabServer.m sits.
    See \code{help pathtool} in Matlab on how to do this.
@@ -131,52 +156,37 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clone, detach, equals, ex
    This will start Matlab and immediately call the MatlabServer(.m)
    script. Here is how it should look like when the server starts:
    \preformatted{
-                                  < M A T L A B >
+   
+                              < M A T L A B >
                   Copyright 1984-2004 The MathWorks, Inc.
-                         Version 7.0.0.19901 (R14)
-                                May 06, 2004
+                  Version 7.0.1.24704 (R14) Service Pack 1
+                             September 13, 2004
 
 
   To get started, type one of these: helpwin, helpdesk, or demo.
   For product information, visit www.mathworks.com.
- 
+
 Matlab v7.x or higher detected.
 Saving with option -V6.
 Added InputStreamByteWrapper to dynamic Java CLASSPATH.
 ----------------------
 Matlab server started!
 ----------------------
-Server socket created.
+Trying to open server socket (port 9999)...done.
 
    }
    Alternatively you can start Matlab and type \code{MatlabServer}
    at the prompt.
- }
 
- \section{Starting the Matlab server from within \R}{
-   Alternatively, the Matlab server may be started from within \R by
-   calling \code{Matlab$startServer()}. By default 'matlab' is called;
-   if named differently set \code{options(matlab="matlab6.5")}, say.
-   \emph{The method is experimental and may not work on your system.}
-
-   Note that the code will \emph{not} halt and wait for Matlab to get
-   started. Thus, you have to make sure you will wait long enough for
-   the server to get up and running before the \R client try to
-   connect. By default, the client will try once a second for 30 seconds
-   before giving up.
-   Moreover, on non-Windows systems, the above command will start Matlab
-   in the background making all Matlab messages be sent to the \R output
-   screen.
-   In addition, the method will copy the MatlabServer and
-   InputStreamByteWrapper files to the current directory and start
-   Matlab from there.
+   By default the Matlab server listens for connections on port 9999.
+   For other ports, set environment variable \code{MATLABSERVER_PORT}.
  }
 
  \section{Confirmed Matlab versions}{
    This package has been confirmed to work \emph{successfully} out of
    the box together with Matlab v6.1.0.450 (R12.1),
    Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14),
-   and Matlab v7.0.1.24704 (R14SP1).
+   Matlab v7.0.1.24704 (R14SP1), and Matlab v7.0.4.365 (R14SP2).
    [If you successfully use a higher Matlab version, please tell us, so
     we can share it here.]
 
@@ -197,10 +207,10 @@ Server socket created.
  \examples{\dontrun{
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # This example will try to connect to the Matlab server running on the
-# same machine.
+# same machine, e.g. Matlab$startServer(port=9998)
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Create a Matlab client
-matlab <- Matlab(host="localhost")
+matlab <- Matlab(host="localhost", port=9998)
 
 # Connect to the Matlab server
 if (!open(matlab))
@@ -211,7 +221,7 @@ res <- evaluate(matlab, "A=1+2;", "B=ones(2,20);")
 
 # Get Matlab variables
 data <- getVariable(matlab, c("A", "B"))
-cat("Recieved variables:\n")
+cat("Received variables:\n")
 str(data)
 
 # Set variables in Matlab
@@ -221,7 +231,7 @@ setVariable(matlab, ABCD=ABCD)
 
 # Retrieve what we just set
 data <- getVariable(matlab, "ABCD")
-cat("Recieved variables:\n")
+cat("Received variables:\n")
 str(data)
 
 # Create a function (M-file) on the Matlab server
@@ -244,7 +254,7 @@ close(matlab)
 
 }}
 
- \author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+ \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
  \seealso{
    Stand-alone methods \code{\link{readMat}}() and \code{\link{writeMat}}()

@@ -53,7 +53,32 @@
 #   is \emph{not} needed.
 # }
 #
-# \section{Starting the Matlab server}{
+# \section{Starting the Matlab server from within \R}{
+#   The Matlab server may be started from within \R by
+#   calling \code{Matlab$startServer()}. By default 'matlab' is called; 
+#   if named differently set \code{options(matlab="matlab6.5")}, say.
+#   \emph{The method is experimental and may not work on your system.}
+#   By default the Matlab server listens for connections on port 9999.
+#   For other ports, set argument \code{port}, e.g.
+#   \code{Matlab$startServer(port=9998)}.
+#
+#   Note that the code will \emph{not} halt and wait for Matlab to get
+#   started. Thus, you have to make sure you will wait long enough for
+#   the server to get up and running before the \R client try to 
+#   connect. By default, the client will try once a second for 30 seconds
+#   before giving up.
+#   Moreover, on non-Windows systems, the above command will start Matlab
+#   in the background making all Matlab messages be sent to the \R output
+#   screen. 
+#   In addition, the method will copy the MatlabServer and 
+#   InputStreamByteWrapper files to the current directory and start
+#   Matlab from there. 
+# }
+#
+# \section{Starting the Matlab server without \R}{
+#   If the above does not work, the Matlab server may be started manually
+#   from Matlab itself.  Please follow the below instructions carefully.
+#
 #   \bold{To be done once:}\cr
 #   In Matlab, add the path to the directory where MatlabServer.m sits.
 #   See \code{help pathtool} in Matlab on how to do this.
@@ -84,36 +109,20 @@
 #   This will start Matlab and immediately call the MatlabServer(.m)
 #   script. Here is how it should look like when the server starts:
 #   \preformatted{
-#    @include{MatlabServer.out}
+#    @include{../incl/MatlabServer.out}
 #   }
 #   Alternatively you can start Matlab and type \code{MatlabServer}
 #   at the prompt.
-# }
 #
-# \section{Starting the Matlab server from within \R}{
-#   Alternatively, the Matlab server may be started from within \R by
-#   calling \code{Matlab$startServer()}. By default 'matlab' is called; 
-#   if named differently set \code{options(matlab="matlab6.5")}, say.
-#   \emph{The method is experimental and may not work on your system.}
-#
-#   Note that the code will \emph{not} halt and wait for Matlab to get
-#   started. Thus, you have to make sure you will wait long enough for
-#   the server to get up and running before the \R client try to 
-#   connect. By default, the client will try once a second for 30 seconds
-#   before giving up.
-#   Moreover, on non-Windows systems, the above command will start Matlab
-#   in the background making all Matlab messages be sent to the \R output
-#   screen. 
-#   In addition, the method will copy the MatlabServer and 
-#   InputStreamByteWrapper files to the current directory and start
-#   Matlab from there. 
+#   By default the Matlab server listens for connections on port 9999.
+#   For other ports, set environment variable \code{MATLABSERVER_PORT}.
 # }
 #
 # \section{Confirmed Matlab versions}{
 #   This package has been confirmed to work \emph{successfully} out of 
 #   the box together with Matlab v6.1.0.450 (R12.1), 
 #   Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14), 
-#   and Matlab v7.0.1.24704 (R14SP1).
+#   Matlab v7.0.1.24704 (R14SP1), and Matlab v7.0.4.365 (R14SP2).
 #   [If you successfully use a higher Matlab version, please tell us, so
 #    we can share it here.]
 #
@@ -131,7 +140,7 @@
 #   is not possible for others to connect to the Matlab server.
 # }
 #
-# \examples{\dontrun{@include "Matlab.Rex"}}
+# \examples{\dontrun{@include "../incl/Matlab.Rex"}}
 #
 # @author
 #
@@ -208,7 +217,8 @@ setMethodS3("as.character", "Matlab", function(this, ...) {
 # @synopsis
 #
 # \arguments{
-#  \item{...}{Arguments passed to \code{\link[R.utils:getOption.Options]{getOption()}}
+#  \item{...}{Arguments passed to 
+#    \code{\link[R.utils:getOption.Options]{getOption}}() 
 #    of the Options class.}
 # }
 #
@@ -241,7 +251,9 @@ setMethodS3("getOption", "Matlab", function(this, ...) {
 # @synopsis
 #
 # \arguments{
-#  \item{...}{Arguments passed to \code{\link[Rutils:getOption.Options]{setOption()}} of the Options class.}
+#  \item{...}{Arguments passed to 
+#    \code{\link[R.utils:getOption.Options]{setOption()}} 
+#    of the Options class.}
 # }
 #
 # \value{
@@ -607,10 +619,14 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #  \item{matlab}{An optional @character string specifying the name of 
 #    the matlab command, if different from \code{"matlab"}. An absolute
 #    path are possible.}
+#  \item{port}{An optional @integer in [1023,49151].  
+#    If given, the environment variable \code{MATLABSERVER_PORT} is
+#    set specifying which port the Matlab server should listen to for
+#    clients trying to connect.  The default port is 9999.}
 #  \item{minimize}{When starting Matlab on Windows, it is always opened
-#    in a new window (see @see "MatlabServer"). If this argument is @TRUE, 
-#    the new window is minimized, otherwise not. This argument is ignored
-#    on non-Windows systems.}
+#    in a new window (see @see "1. The Matlab server running in Matlab"). 
+#    If this argument is @TRUE, the new window is minimized, otherwise not.
+#    This argument is ignored on non-Windows systems.}
 #  \item{...}{Not used.}
 # }
 #
@@ -643,9 +659,15 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #   @seeclass
 # }
 #*/###########################################################################
-setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), minimize=TRUE, ...) {
+setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), port=NULL, minimize=TRUE, ...) {
   # By loading R.utils here, it is not required if only readMat() is used.
   require(R.utils) || throw("Package not available: R.utils");
+
+  # Argument 'port':
+  if (!is.null(port)) {
+    port <- Arguments$getInteger(port, range=c(1023,49151));
+    Sys.putenv("MATLABSERVER_PORT"=port);
+  }
 
   enter(this$.verbose, "Starting the Matlab server");
   on.exit(exit(this$.verbose), add=TRUE);
@@ -957,7 +979,7 @@ setMethodS3("setVariable", "Matlab", function(this, ..., remote=this$remote) {
 #   Returns nothing.
 # }
 #
-# \examples{\dontrun{@include "Matlab.setFunction.Rex"}}
+# \examples{\dontrun{@include "../incl/Matlab.setFunction.Rex"}}
 #
 # @author
 #
@@ -1062,6 +1084,9 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2006-01-21
+# o Added argument 'port' to Matlab$startServer(..., port=NULL).
+# o Added another Matlab version that is confirmed to work with the package.
 # 2005-06-10
 # o Now R.utils is loaded by the constructor and all static methods.
 # 2005-06-09

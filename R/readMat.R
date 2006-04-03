@@ -39,7 +39,7 @@
 #     is specified by the threshold level of the object. If a numeric, the
 #     value is used to set the threshold of a new Verbose object. If @TRUE, 
 #     the threshold is set to -1 (minimal). If @FALSE, no output is written
-#     (and neither is the \link[R.utils:R.utils]{R.utils} package required).
+#     (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
 #   }
 #   \item{...}{Not used.}
 # }
@@ -57,7 +57,7 @@
 #   some matrices will be too large to be allocated.
 # }
 #
-# @examples "readMat.Rex"
+# @examples "../incl/readMat.Rex"
 #
 # \author{
 #   Henrik Bengtsson, Mathematical Statistics, Lund University.

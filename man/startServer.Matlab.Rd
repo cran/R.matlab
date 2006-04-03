@@ -3,10 +3,10 @@
 % 
 %  
 % 
-% on Mon Jun 27 09:58:37 2005.
+% on Mon Apr 03 17:31:30 2006.
 % 
 % Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2004.
+% by Henrik Bengtsson, 2001-2006.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \name{startServer.Matlab}
@@ -24,17 +24,21 @@
  Java.
 }
 
-\synopsis{startServer.Matlab(this, matlab=getOption("matlab"), minimize=TRUE, ...)}
-\usage{Matlab$startServer(matlab=getOption("matlab"), minimize=TRUE, ...)}
+\synopsis{startServer.Matlab(this, matlab=getOption("matlab"), port=NULL, minimize=TRUE, ...)}
+\usage{Matlab$startServer(matlab=getOption("matlab"), port=NULL, minimize=TRUE, ...)}
 
 \arguments{
  \item{matlab}{An optional \code{\link[base]{character}} string specifying the name of
    the matlab command, if different from \code{"matlab"}. An absolute
    path are possible.}
+ \item{port}{An optional \code{\link[base]{integer}} in [1023,49151].
+   If given, the environment variable \code{MATLABSERVER_PORT} is
+   set specifying which port the Matlab server should listen to for
+   clients trying to connect.  The default port is 9999.}
  \item{minimize}{When starting Matlab on Windows, it is always opened
-   in a new window (see \code{\link{MatlabServer}}). If this argument is \code{\link[base:logical]{TRUE}},
-   the new window is minimized, otherwise not. This argument is ignored
-   on non-Windows systems.}
+   in a new window (see \code{\link{1. The Matlab server running in Matlab}}).
+   If this argument is \code{\link[base:logical]{TRUE}}, the new window is minimized, otherwise not.
+   This argument is ignored on non-Windows systems.}
  \item{...}{Not used.}
 }
 
@@ -61,7 +65,7 @@
   where Matlab is started, copies of them will automatically be made.
 }
 
-\author{Henrik Bengtsson \url{http://www.braju.com/R/}}
+\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
 
 \seealso{
   For more information see \code{\link{Matlab}}.
