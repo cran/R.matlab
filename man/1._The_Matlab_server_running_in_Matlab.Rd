@@ -1,12 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Do not modify this file since it was automatically generated from:
 % 
-%  
+%  901.MatlabServer.R
 % 
-% on Mon Apr 03 17:31:22 2006.
-% 
-% Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2006.
+% by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \name{1. The Matlab server running in Matlab}
@@ -138,7 +135,7 @@ end
 \% Ports 1-1023 are reserved for the Internet Assigned Numbers Authority.
 \% Ports 49152-65535 are dynamic ports for the OS. [3]
 if (port < 1023 | port > 49151)
-  error('Cannot not open connection. Port ('MATLABSERVER_PORT') is out of range [1023,49151]: \%d', port);
+  error('Cannot not open connection. Port (''MATLABSERVER_PORT'') is out of range [1023,49151]: \%d', port);
 end
 
 fprintf(1, 'Trying to open server socket (port \%d)...', port);
@@ -352,6 +349,10 @@ close(server);
 
 \%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%\%
 \% HISTORY:
+\% 2006-05-08
+\% o BUG FIX: The error message string for reporting port out of range
+\%   was invalid and gave the error '... Line: 109 Column: 45 ")" expected,
+\%   "identifier" found.'.  Thanks Alexander Nervedi for reporting this.
 \% 2006-01-21
 \% o Now an error is thrown if port number is out of (safe) range.
 \% o Added option to specify the port number via the system environment

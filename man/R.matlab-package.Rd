@@ -1,12 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Do not modify this file since it was automatically generated from:
 % 
-%  
+%  999.package.R
 % 
-% on Mon Apr 03 17:31:24 2006.
-% 
-% Generator was the Rdoc class, which is part of the R.oo package written
-% by Henrik Bengtsson, 2001-2006.
+% by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  \name{R.matlab-package}
