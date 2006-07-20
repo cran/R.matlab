@@ -2,6 +2,12 @@
 Package: R.matlab
 =================
 
+Version: 1.1.2 [2006-05-08]
+o BUG FIX: When the port for the Matlab server (MATLABSERVER_PORT) was
+  out of range, a Matlab syntax error occured, i.e "... Line: 109 
+  Column: 45 ")" expected, "identifier" found.'.  Thanks Alexander
+  Nervedi for reporting this.
+
 Version: 1.1.1 [2006-01-21]
 o Added argument 'port' to Matlab$startServer(..., port=NULL) to
   start the Matlab server such that it listens to another port than
