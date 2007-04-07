@@ -122,7 +122,8 @@
 #   This package has been confirmed to work \emph{successfully} out of 
 #   the box together with Matlab v6.1.0.450 (R12.1), 
 #   Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14), 
-#   Matlab v7.0.1.24704 (R14SP1), and Matlab v7.0.4.365 (R14SP2).
+#   Matlab v7.0.1.24704 (R14SP1), Matlab v7.0.4.365 (R14SP2),
+#   and Matlab v7.2.0.232 (R2006a).
 #   [If you successfully use a higher Matlab version, please tell us, so
 #    we can share it here.]
 #
@@ -140,6 +141,13 @@
 #   is not possible for others to connect to the Matlab server.
 # }
 #
+# \section{Matlab server is timing out}{
+#   It might be that an @seemethod "evaluate" call to the Matlab server
+#   takes a long time for the server to finish resulting in a time-out
+#   exception.  By default this happens after 30 seconds, but it can
+#   be changed by modifying options, cf. @see "setOption".
+# }
+#
 # \examples{\dontrun{@include "../incl/Matlab.Rex"}}
 #
 # @author
@@ -154,6 +162,12 @@
 setConstructorS3("Matlab", function(host="localhost", port=9999, remote=!(host %in% c("localhost", "127.0.0.1"))) {
   # By loading R.utils here, it is not required if only readMat() is used.
   require(R.utils) || throw("Package not available: R.utils");
+
+  # Argument 'port':
+  if (!is.null(port)) {
+    port <- Arguments$getInteger(port, range=c(1023,65535));
+  }
+
 
   extend(Object(), "Matlab",
     con      = NULL,
@@ -191,7 +205,10 @@ setConstructorS3("Matlab", function(host="localhost", port=9999, remote=!(host %
 #   @seeclass
 # }
 #*/###########################################################################
-setMethodS3("as.character", "Matlab", function(this, ...) {
+setMethodS3("as.character", "Matlab", function(x, ...) {
+  # To please R CMD check
+  this <- x;
+
   s <- sprintf("%s: The Matlab host is '%s' and communication goes via port %d.", class(this)[1], this$host, this$port);
   s <- sprintf("%s Objects are passed via the %s (remote=%s).", s,
          (if (this$remote) "socket connection" else "local file system"),
@@ -211,7 +228,9 @@ setMethodS3("as.character", "Matlab", function(this, ...) {
 #
 # \description{
 #   @get "title" where the option is specified like a file pathname, e.g.
-#   "readResult/maxTries". See the \link[R.utils]{Options} class for details.
+#   "readResult/maxTries".  See @seemethod "setOption" for what options
+#   are available.  
+#   See the \link[R.utils]{Options} class for details.
 # }
 #
 # @synopsis
@@ -260,6 +279,19 @@ setMethodS3("getOption", "Matlab", function(this, ...) {
 #   Returns the previous value of the option.
 # }
 #
+# \section{Available options}{
+#  \itemize{
+#   \item{readResult/maxTries}{The maximum number of times the connection
+#      is check for an answer from the Matlab server before giving up.
+#      Default values is 30 times.}
+#   \item{readResult/interval}{The interval in seconds between each poll
+#      for an answer.  Default interval is 1 (second).}
+#  }
+#
+#  With default values of the above options, the \R Matlab client waits 
+#  30 seconds for a reply from the Matlab server before giving up.
+# }
+#
 # @author
 #
 # \seealso{
@@ -270,6 +302,7 @@ setMethodS3("getOption", "Matlab", function(this, ...) {
 setMethodS3("setOption", "Matlab", function(this, ...) {
   setOption(this$.options, ...);
 })
+
 
 
 ###########################################################################/**
@@ -333,6 +366,8 @@ setMethodS3("open", "Matlab", function(con, trials=30, interval=1, ...) {
   } # while (count < trials)
 
   suffix <- sprintf("...failed (after %d tries)", as.integer(count));
+
+  throw(sprintf("Failed to connection to Matlab on host '%s' (port %d) after trying %d times for approximately %.1f seconds.", this$host, as.integer(this$port), count, count*interval));
 
   return(FALSE);
 });
@@ -619,7 +654,7 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #  \item{matlab}{An optional @character string specifying the name of 
 #    the matlab command, if different from \code{"matlab"}. An absolute
 #    path are possible.}
-#  \item{port}{An optional @integer in [1023,49151].  
+#  \item{port}{An optional @integer in [1023,65535].  
 #    If given, the environment variable \code{MATLABSERVER_PORT} is
 #    set specifying which port the Matlab server should listen to for
 #    clients trying to connect.  The default port is 9999.}
@@ -627,6 +662,8 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #    in a new window (see @see "1. The Matlab server running in Matlab"). 
 #    If this argument is @TRUE, the new window is minimized, otherwise not.
 #    This argument is ignored on non-Windows systems.}
+#  \item{options}{A @character @vector of options used to call the
+#    Matlab application.}
 #  \item{...}{Not used.}
 # }
 #
@@ -659,14 +696,14 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #   @seeclass
 # }
 #*/###########################################################################
-setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), port=NULL, minimize=TRUE, ...) {
+setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...) {
   # By loading R.utils here, it is not required if only readMat() is used.
   require(R.utils) || throw("Package not available: R.utils");
 
   # Argument 'port':
   if (!is.null(port)) {
-    port <- Arguments$getInteger(port, range=c(1023,49151));
-    Sys.putenv("MATLABSERVER_PORT"=port);
+    port <- Arguments$getInteger(port, range=c(1023,65535));
+    Sys.setenv("MATLABSERVER_PORT"=port);
   }
 
   enter(this$.verbose, "Starting the Matlab server");
@@ -702,22 +739,27 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
     printf(this$.verbose, level=-1, "Matlab server file found: '%s'\n", filename);
   }
   
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Setup call string to start Matlab
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   cmd <- matlab;
   if (is.null(cmd))
     cmd <- "matlab";
 
   OST <- .Platform$OS.type;
   if (OST == "windows") {
-    options <- "/nodesktop /nosplash";
+    optionPrefix <- "/";
     if (minimize)
-      options <- paste(options, "/minimize");
-    options <- paste(options, "/r MatlabServer");
+      options <- c(options, "minimize");
   } else {
-    options <- "-nodesktop -nosplash -r MatlabServer &";
+    optionPrefix <- "-";
   }
-
-  cmd <- paste(cmd, " ", options, sep="");
-
+  options <- c(options, "r MatlabServer");
+  options <- paste(optionPrefix, options, sep="");
+  options <- paste(options, collapse=" ");
+  cmd <- paste(cmd, options, sep=" ");
+  if (OST != "windows")
+    cmd <- paste(cmd, "&", sep=" ");
   printf(this$.verbose, level=-1, "Matlab server start command: '%s'\n", cmd);
 
   if (OST == "windows") {
@@ -725,6 +767,8 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   } else {
     res <- system(cmd);
   }
+
+  printf(this$.verbose, level=-1, "Return value: %d\n", as.integer(res));
   
   res;
 }, static=TRUE);
@@ -759,8 +803,8 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
 # }
 #
 # \value{
-#   Returns \code{0} if expressions were evaluated successfully. An exception
-#   might also be thrown.
+#   Returns (invisibly) @NULL if expressions were evaluated successfully. 
+#   An exception might also be thrown.
 # }
 #
 # @author
@@ -781,7 +825,6 @@ setMethodS3("evaluate", "Matlab", function(this, ..., collapse=";") {
 
   resStr <- if (is.null(res)) 0 else res;
   printf(this$.verbose, level=0, "Evaluated expression on the Matlab server with return code %d.\n", as.integer(resStr));
-
   
   invisible(res);
 })
@@ -1084,6 +1127,19 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2007-01-22
+# o Replaced Sys.putenv() with new Sys.setenv(). 
+# 2006-12-28
+# o Updated Rdoc for evaluate() to say that it returns NULL (not 0).
+# o Now open() throws an error if connection to Matlab failed.
+# o Argument 'port' of startServer() now defaults to '9999' to make it more
+#   explicit what the default port is.
+# 2006-12-27
+# o Added setVerbose() to the example of Matlab.
+# 2006-08-24
+# o Added more details on available options in setOption().
+# 2006-08-15
+# o A user confirmed that the Matlab Server works with Matlab v7.2.0.232.
 # 2006-01-21
 # o Added argument 'port' to Matlab$startServer(..., port=NULL).
 # o Added another Matlab version that is confirmed to work with the package.
