@@ -2,6 +2,44 @@
 Package: R.matlab
 =================
 
+Version: 1.2.2 [2008-07-12]
+o Now the first pass in writeMat() that counts the number of 
+  bytes to be written is skipped if argument 'onWrite' is 
+  not given.  This means that writing to file, which is the
+  most common use case, will no longer involve the counting.
+  Thank to Adam Grossman at Stanford University for suggesting
+  the modification and providing initial code.  He reports
+  a substantial speed up in writing large files (38MB file).
+o CLEAN UP: Removed internal debugging/asserting code.
+o Renamed the HISTORY file to NEWS.
+
+
+Version: 1.2.1 [2008-05-08]
+o In readMat()/writeMat() we use an internal character vector
+  to represent the 8-bit ASCII character set.  However, in R
+  one cannot represent ASCII 0x00 - it resolves to an empty
+  string, and from R v2.8.0 we will get a warning if we try.
+  For now, we have replaced the ASCII for 0x00 with the empty
+  string (unless before R v2.6.0).  We might want to move 
+  away from using this ASCII vector for intToChar()/charToInt() 
+  and instead make use of intToUtf8()/utf8ToInt() or 
+  alternatively just rawToChar()/charToRaw().
+
+
+Version: 1.2.0 [2008-02-12]
+o Added support for reading compressed MAT files.  It requires
+  that the 'Rcompression' package (Omegahat.org) is available.
+o Added support for also returning sparse matrices according to
+  the representations given by either the 'Matrix' or the
+  'SparseM' package.
+o Added simple UTF-* string support.  Conversion should be 
+  accurate when the R installation supports iconv.
+o Added mat-files/StructWithSparseMatrix-v4.mat from JR.
+o Credits for all of the above new feature goes to Jason Riedy
+  at the Computer Science Dept, UC Berkeley.  Thanks also to 
+  Duncan Temple-Lang at UC Davis for the Rcompression package.
+
+
 Version: 1.1.4 [2007-04-19]
 o Added a "hint" to error message 'Tag type not supported: 
   miCOMPRESSED' to clarify that readMat() does not support 
