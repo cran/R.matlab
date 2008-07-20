@@ -1,6 +1,6 @@
 Package: R.matlab
-Version: 1.2.2
-Date: 2008-07-12
+Version: 1.2.3
+Date: 2008-07-20
 Title: Read and write of MAT files together with R-to-Matlab connectivity
 Author: Henrik Bengtsson <henrikb@braju.com>, Jason Riedy <ejr@cs.berkeley.edu>
 Maintainer: Henrik Bengtsson <henrikb@braju.com>
@@ -10,4 +10,4 @@ Description: This package provides methods to read and write MAT files.  It also
 License: LGPL (>= 2.1)
 URL: http://www.braju.com/R/
 LazyLoad: TRUE
-Packaged: Thu Jul 17 14:18:38 2008; hb
+Packaged: Sun Jul 20 11:17:08 2008; hb
