@@ -90,9 +90,10 @@
 #   so called Java classpath has to be set. In Matlab, type 
 #   \code{which('classpath.txt')} to find where the default 
 #   Matlab classpath.txt file is located. Copy this file to the
-#   \emph{current directory} and append the \emph{path} (the directory) 
-#   to InputStreamByteWrapper.class file, which is the same as the path
-#   of the MatlabServer.m you identified above.\cr
+#   \emph{current directory}, and append the \emph{path} (the directory) 
+#   of InputStreamByteWrapper.class to the end of classpath.txt.
+#   The path of InputStreamByteWrapper.class should be the same as 
+#   the path of the MatlabServer.m that you identified above.\cr
 #
 #   \bold{Lazy alternative:} Instead of setting path and classpaths,
 #   you may try to copy the MatlabServer.m and InputStreamByteWrapper.class 
@@ -120,12 +121,18 @@
 #
 # \section{Confirmed Matlab versions}{
 #   This package has been confirmed to work \emph{successfully} out of 
-#   the box together with Matlab v6.1.0.450 (R12.1), 
-#   Matlab v6.5.0.180913a (R13), Matlab v7.0.0.19901 (R14), 
-#   Matlab v7.0.1.24704 (R14SP1), Matlab v7.0.4.365 (R14SP2),
-#   and Matlab v7.2.0.232 (R2006a).
-#   [If you successfully use a higher Matlab version, please tell us, so
-#    we can share it here.]
+#   the box together with:
+#   Matlab v6.1.0.450 (R12.1), 
+#   Matlab v6.5.0.180913a (R13),
+#   Matlab v7.0.0.19901 (R14), 
+#   Matlab v7.0.1.24704 (R14SP1),
+#   Matlab v7.0.4.365 (R14SP2),
+#   Matlab v7.2.0.232 (R2006a), 
+#   Matlab 7.4.0 (R2007a), and
+#   Matlab 7.7.0.471 (R2008b), and
+#   Matlab version 7.10.0.499 (R2010a).
+#   If you successfully use a different/higher Matlab version, 
+#   please tell us, so we can share it here.
 #
 #   It does \emph{not} work with Matlab v5 or before!
 # }
@@ -1127,6 +1134,9 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2010-08-27
+# o Updated example(Matlab) slightly.
+# o Clarified the Rdoc for Matlab.
 # 2007-01-22
 # o Replaced Sys.putenv() with new Sys.setenv(). 
 # 2006-12-28
