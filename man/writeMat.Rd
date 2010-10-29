@@ -25,7 +25,8 @@
   \item{con}{Binary \code{\link[base:connections]{connection}} to which the MAT file structure should be
     written to. A string is interpreted as filename, which then will be
     opened (and closed afterwards).}
-  \item{...}{\emph{Named} variables to be written.}
+  \item{...}{\emph{Named} variables to be written where the names
+    must be unique.}
   \item{matVersion}{A \code{\link[base]{character}} string specifying what MAT file format
     version to be written to the connection. If \code{"5"}, a MAT v5 file
     structure is written. No other formats are currently supported.}
@@ -81,6 +82,29 @@ X <- list(A=A, B=B, C=C)
 stopifnot(all.equal(X, data[names(X)]))
 
 unlink(filename)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# All objects written must be named uniquely
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+tryCatch({
+  # Named
+  writeMat(filename, A=A)
+  # Not named
+  writeMat(filename, A)
+}, error = function(ex) {
+  cat("ERROR:", getMessage(ex), "\n")
+})
+
+
+tryCatch({
+  # Uniquely named
+  writeMat(filename, A=A, B=B, C=C)
+  # Not uniquely named
+  writeMat(filename, A=A, B=B, A=C)
+}, error = function(ex) {
+  cat("ERROR:", getMessage(ex), "\n")
+})
 
 
 \dontrun{
