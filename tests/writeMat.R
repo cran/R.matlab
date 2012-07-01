@@ -1,3 +1,5 @@
+library("R.matlab")
+
 A <- matrix(1:27, ncol=3)
 B <- as.matrix(1:10)
 C <- array(1:18, dim=c(2,3,3))

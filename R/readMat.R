@@ -90,6 +90,7 @@
 #   [1] The MathWorks Inc., \emph{Matlab - MAT-File Format, version 5}, June 1999.\cr
 #   [2] The MathWorks Inc., \emph{Matlab - Application Program Interface Guide, version 5}, 1998.\cr
 #   [3] The MathWorks Inc., \emph{Matlab - MAT-File Format, version 7}, September 2009, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
+#   [4] The MathWorks Inc., \emph{Matlab - MAT-File Format, version R2012a}, September 2012, \url{http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf}\cr
 # }
 #
 # @keyword file
@@ -417,7 +418,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # which in order to avoid lack-of-memory allocation errors will via
   # trial and error find a reasonably sized internal inflation buffer.
   uncompressRcompression <- function(zraw, asText=TRUE, sizeRatio=3, delta=0.9, ...) {
-    if (!require("Rcompression", quietly=TRUE)) {
+    # TRICK: Hide 'Rcompression' from R CMD check
+    pkgName <- "Rcompression";
+    if (!require(pkgName, character.only=TRUE, quietly=TRUE)) {
       throw("Cannot read compressed data.  Omegahat.org package 'Rcompression' could not be loaded.  Alternatively, save your data in a non-compressed format by specifying -V6 when calling save() in Matlab or Octave.");
     }
 
@@ -425,6 +428,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     if (delta <= 0 || delta >= 1) {
       throw("Argument 'delta' is out of range (0,1): ", delta);
     }
+
+    # Get Rcompression::uncompress() without R CMD check noticing.
+    uncompress <- getFromNamespace("uncompress", ns=pkgName);
 
     n <- length(zraw);
     unzraw <- NULL;
@@ -443,7 +449,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
       lastException <- NULL;
       tryCatch({
-        unzraw <- Rcompression::uncompress(zraw, size=size, asText=asText);
+        unzraw <- uncompress(zraw, size=size, asText=asText);
         # Successful uncompression
         break;
       }, error = function(ex) {
@@ -475,12 +481,66 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   } # uncompressRcompression()
 
 
-  # memDecompress() was introduced in R v2.10.0
-  if (getRversion() >= "2.10.0" && exists("memDecompress", mode="function")) {
-    uncompress <- uncompressMemDecompress;
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Decompression method
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  # Default decompress function
+  uncompress <- function(...) {
+    throw("Cannot decompress compressed MAT file because none of the decompression methods are available: ", hpaste(decompressWith0, maxHead=Inf));
+  } # uncompress()
+  attr(uncompress, "label") <- "N/A";
+
+
+  # Override with available methods
+  decompressWith <- getOption("R.matlab::decompressWith", c("memDecompress", "Rcompression"));
+
+  # Validate option
+  if (is.character(decompressWith)) {
+  } else if (is.function(decompressWith)) {
   } else {
-    uncompress <- uncompressRcompression;
+    throw("Unknown mode of 'R.matlab::decompressWith': ", mode(decompressWith));
   }
+
+  decompressWith0 <- decompressWith;
+
+  if (length(decompressWith) > 0) {
+    if (is.character(decompressWith)) {
+      # Is memDecompress() available?
+      # memDecompress() was introduced in R v2.10.0
+      if (is.element("memDecompress", decompressWith)) {
+        if (getRversion() < "2.10.0" || !exists("memDecompress", mode="function")) {
+          decompressWith <- setdiff(decompressWith, "memDecompress");
+        }
+      }
+    
+      # Is Rcompression package available?
+      if (is.element("Rcompression", decompressWith)) {
+        if (require("R.utils")) {
+          if (!isPackageInstalled("Rcompression")) {
+            decompressWith <- setdiff(decompressWith, "Rcompression");
+          }
+        }
+      }
+
+      # Select decompression method
+      if (is.character(decompressWith)) {
+        if (decompressWith[1] == "memDecompress") {
+          uncompress <- uncompressMemDecompress;
+          attr(uncompress, "label") <- decompressWith[1];
+        } else if (decompressWith[1] == "Rcompression") {
+          uncompress <- uncompressRcompression;
+          attr(uncompress, "label") <- decompressWith[1];
+        } else {
+          # Don't throw an exception here, because it may be 
+          # that the MAT files is not compressed.
+        }
+      }
+    } else if (is.function(decompressWith)) {
+      uncompress <- decompressWith;
+      attr(uncompress, "label") <- "<function>";
+
+    }
+  } # if (length(decompressWith) > 0)
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -805,6 +865,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           j <- as.integer(data[,2]);
           s <- data[,3];
           rm(data);
+
+          verbose && str(verbose, level=-102, header);
+          verbose && str(verbose, level=-102, i);
+          verbose && str(verbose, level=-102, j);
+          verbose && str(verbose, level=-102, s);
           
           # When saving a sparse matrix, Matlab is making sure that one can infer
           # the size of the m-by-n sparse matrix for the index matrix [i,j]. If
@@ -872,10 +937,13 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   
     repeat {
       header <- readMat4Header(con, firstFourBytes=firstFourBytes);
+      verbose && str(verbose, level=-102, header);
       if (is.null(header))
         break;
 
       data <- readMat4Data(con, header);
+      verbose && str(verbose, level=-102, data);
+
       result <- append(result, data);
       rm(data);
 
@@ -1206,20 +1274,38 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         if (identical(tag$type, "miCOMPRESSED")) {
           n <- tag$nbrOfBytes;
           zraw <- readBinMat(con=con, what=raw(), n=n);
-          verbose && cat(verbose, level=-110, "Uncompressing ", n, " bytes");
+          verbose && cat(verbose, level=-110, "Decompressing ", n, " bytes");
+          verbose && printf(verbose, level=-110, "zraw [%d bytes]: %s\n", length(zraw), hpaste(zraw, maxHead=8, maxTail=8));
+          # Sanity check
+          stopifnot(identical(length(zraw), n));
+## zraw0 <<- zraw;
+          tryCatch({
+            unzraw <- uncompress(zraw, asText=FALSE);
 
-          unzraw <- uncompress(zraw, asText=FALSE);
+            verbose && printf(verbose, level=-110,
+                    "Inflated %.3f times from %d bytes to %d bytes.\n", 
+                    length(unzraw)/length(zraw), length(zraw), length(unzraw));
+
+            pushBackRawMat(con, unzraw);
+            rm(unzraw);
+          }, error = function(ex) {
+            msg <- ex$message;
+            assign("R.matlab.debug.zraw", zraw, envir=globalenv());
+            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (using '%s'). Please report to the R.matlab package maintainer (%s). The reason was: %s", attr(uncompress, "label"), getMaintainer(R.matlab), msg);
+            onError <- getOption("R.matlab::readMat/onDecompressError");
+            if (identical(onError, "warning")) {
+              verbose && enter(verbose, "Skipping");
+              verbose && cat(verbose, msg);
+              warning(msg);
+              verbose && exit(verbose);
+            } else {
+              throw(msg);
+            }
+          });
           rm(zraw);
 
-          verbose && printf(verbose, level=-110,
-                  "Inflated %.3f times from %d bytes to %d bytes.\n", 
-                  length(unzraw)/length(zraw), length(zraw), length(unzraw));
-
-          pushBackRawMat(con, unzraw);
-          rm(unzraw);
-
           tag <- readTag(this);
-        }
+        } # if (identical(tag$type, "miCOMPRESSED"))
   
         tag;
       } # readTag()
@@ -1289,6 +1375,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         
         flags <- list(logical=logical, global=global, complex=complex, class=class, classSize=classSize, nzmax=nzmax);
 
+        verbose && cat(verbose, level=-100, "Flags:");
         verbose && print(verbose, level=-100, unlist(flags[-1]));
         
         flags;
@@ -1438,18 +1525,32 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     
     
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readValues <- function(this) {
+      readValues <- function(this, logical=FALSE) {
         verbose && enter(verbose, level=-70, "Reading Values");
         on.exit(verbose && exit(verbose));
         
         tag <- readTag(this);
 
-        sizeOf <- tag$sizeOf %/% 8;
+        # "If the 'logical' bit is set, it indicates the array is used for
+        # logical indexing." [4].  This is a rather vague explanation, but
+        # by comparing the byte content of sparse matrices containing 
+        # doubles to those containing logical, it appears as if the latter
+        # are stored as single 0/1 bytes, regardless of what the "tag"
+        # is indicating.
+        if (logical) {
+          # Override tag patarmeters.
+          sizeOf <- 1L;
+          what <- logical(0);
+        } else {
+          sizeOf <- tag$sizeOf %/% 8;
+          what <- tag$what;
+        }
+
         len <- tag$nbrOfBytes %/% sizeOf;
 
         verbose && cat(verbose, level=-100, "Reading ", len, " values each of ", sizeOf, " bytes. In total ", tag$nbrOfBytes, " bytes.");
         
-        value <- readBinMat(con, what=tag$what, size=sizeOf, n=len, signed=tag$signed);
+        value <- readBinMat(con, what=what, size=sizeOf, n=len, signed=tag$signed);
         verbose && str(verbose, level=-102, value);
         
         left <<- left - sizeOf*len;
@@ -1494,6 +1595,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         }
 
         arrayFlags <- readArrayFlags(this);
+        verbose && cat(verbose, level=-100, "Array flags:");
         verbose && str(verbose, level=-70, arrayFlags);
 
         arrayFlags$tag <- tag;
@@ -1567,9 +1669,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           names(matrix) <- arrayName$name;
         } else if (arrayFlags$complex) {
           verbose && enter(verbose, level=-4, "Reading complex matrix.")
-          pr <- readValues(this);
+          pr <- readValues(this, logical=arrayFlags$logical);
           if (left > 0)
-            pi <- readValues(this);
+            pi <- readValues(this, logical=arrayFlags$logical);
           matrix <- complex(real=pr$value, imaginary=pi$value);
 
           # Set dimension of complex matrix
@@ -1647,9 +1749,10 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
               stop("MAT v5 file format error: Length of column vector 'jc' (sparse arrays) is not ", ncol, "+1 as expected: ", length(jc));
             }
 
-            # Read real part
-            pr <- readValues(this)$value;
+            # Read vector
+            pr <- readValues(this, logical=arrayFlags$logical)$value;
 
+            verbose && str(verbose, level=-102, header);
             verbose && str(verbose, level=-102, ir);
             verbose && str(verbose, level=-102, jc);
             verbose && str(verbose, level=-102, pr);
@@ -1659,7 +1762,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
             #  number (if the complex bit is set in Array Flags)." [1, p20]
             if (arrayFlags$complex) {
               # Read imaginary part
-              pi <- readValues(this)$value;
+              pi <- readValues(this, logical=arrayFlags$logical)$value;
               verbose && str(verbose, level=-102, pi);
             }
 
@@ -1676,10 +1779,14 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
           if (sparseMatrixClass == "Matrix"
               && require("Matrix", quietly=TRUE)) {
-            if (is.integer(pr) || is.logical(pr)) {
+            # Logical or numeric sparse Matrix?
+            if (is.logical(pr)) {
+              className <- "lgCMatrix";
+            } else {
               pr <- as.double(pr);
+              className <- "dgCMatrix";
             }
-            matrix <- new("dgCMatrix",
+            matrix <- new(className,
                           x=pr, p=as.integer(jc), i=as.integer(ir-1),
                           Dim=as.integer(c(nrow,ncol)));
             matrix <- list(matrix);
@@ -1687,7 +1794,10 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           }
           else if (sparseMatrixClass == "SparseM"
                    && require("SparseM", quietly=TRUE)) {
-            if (is.integer(pr) || is.logical(pr)) {
+            if (is.logical(pr)) {
+              # Sparse matrices of SparseM cannot hold logical values.
+              pr <- as.double(pr);
+            } else {
               pr <- as.double(pr);
             }
             matrix <- new("matrix.csc",
@@ -1698,7 +1808,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           }
           else {
             # Create expanded matrix...
-            matrix <- matrix(0, nrow=nrow, ncol=ncol);
+            if (is.logical(pr)) {
+              defValue <- FALSE;
+            } else {
+              defValue <- 0;
+            }
+            matrix <- matrix(defValue, nrow=nrow, ncol=ncol);
             attr(matrix, "name") <- arrayName$name;
 
             # Now, for each column insert the non-zero elements
@@ -1731,7 +1846,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           }
           # End mxSPARSE_CLASS
         } else {
-          data <- readValues(this);
+          data <- readValues(this, logical=arrayFlags$logical);
           matrix <- data$value;
       
           verbose && cat(verbose, level=-5, "Converting to ", arrayFlags$class, " matrix.");
@@ -1919,6 +2034,38 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 ###########################################################################
 # HISTORY:
+# 2012-06-07
+# o BUG FIX: readMat() could not read sparse matrices containing logical
+#   values, only numerics.  This was because the 'logical' bit in the
+#   Array Flags was not utilized by readMat(), which in turn was because
+#   the file format documentation is rather vague on how to use that bit.
+#   This means that readMat() now represents sparse logical matrices
+#   using logical values, except when sparseMatrixClass="SparseM",
+#   because SparseM matrices can only hold numeric values.
+#   Thanks to Irtisha Sinhg at Cornell University for reporting on this.
+# 2012-05-05
+# o Now readMat() decompression error messages are more informative.
+# o Now it is possible to specify the decompression method for readMat().
+# 2012-04-13
+# o Added option 'R.matlab::readMat/onDecompressError' allowing to skip
+#   data object that fails to uncompress.  This will at least allow
+#   to read remaining objects in a MAT file.
+# o Added a sanity check for the length of the internal 'zraw' buffer
+#   to be uncompressed.
+# 2012-04-12
+# o BUG FIX: Forgot to add 'character.only=TRUE' in require() for
+#   loading 'Rcompression' in the 2012-04-01 update.
+# 2012-04-02
+# o Made error message when failing to decompress data more informative.
+# o Added verbose hpaste() details on the 'zraw' vector to be uncompressed.
+# o BUG FIX: readMat(..., verbose=-111) would give an error on object
+#   'zraw' not found.
+# 2012-04-01
+# o CLEANUP: Removed 'Rcompression' from set of "Suggests" packages,
+#   because since R v2.10.0 (Oct 2009) we can use memDecompress() of
+#   the 'base' package instead.  However, just in case someone is still
+#   running older versions of R, readMat() does indeed still look for
+#   'Rcompression' as a fallback.
 # 2011-09-24
 # o GENERALIZATION: Now readMat() utilizes base::memDecompress() to
 #   uncompress compressed data structures, unless running R v2.9.x or

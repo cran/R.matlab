@@ -2,8 +2,64 @@
 Package: R.matlab
 =================
 
+Version: 1.6.1 [2012-06-30]
+o Updated package dependencies.
+
+
+Version: 1.6.0 [2012-06-07]
+o BUG FIX: readMat() could not read sparse matrices containing logical
+  values, only numerics.  This was because the 'logical' bit in the
+  Array Flags was not utilized by readMat(), which in turn was because
+  the file format documentation is rather vague on how to use that bit.
+  This means that readMat() now represents sparse logical matrices
+  using logical values, except when sparseMatrixClass="SparseM",
+  because SparseM matrices can only hold numeric values.
+  Thanks to Irtisha Sinhg at Cornell University for reporting on this.
+
+
+Version: 1.5.9 [2012-05-05]
+o Now readMat() decompression error messages are more informative.
+o Now it is possible to specify the decompression method for readMat().
+
+
+Version: 1.5.8 [2012-04-16]
+o Package now only *imports* R.methodsS3.
+
+
+Version: 1.5.7 [2012-04-13]
+o The 'Rcompression' update in v1.5.5 introduced a bug, causing
+  the loading of that package to fail.
+
+
+Version: 1.5.6 [2012-04-02]
+o BUG FIX: readMat(..., verbose=-111) would give an error on object
+  'zraw' not being found.
+
+
+Version: 1.5.5 [2012-04-01]
+o ROBUSTNESS: Move most of the test code that was in the examples
+  of readMat() and writeMat() to formal system tests of the package,
+  and made those examples simpler.
+o CLEANUP: Removed 'Rcompression' from set of "Suggests" packages,
+  because since R v2.10.0 (Oct 2009) we can use memDecompress() of
+  the 'base' package instead.  However, just in case someone is still
+  running older versions of R, readMat() does indeed still look for
+  'Rcompression' as a fallback.
+
+
+Version: 1.5.4 [2012-03-06]
+o CRAN POLICY: Removed all internal copies of 'base' functions
+  that have .Internal() calls.
+
+
+Version: 1.5.3 [2011-12-08]
+o DOCUMENTATION: Added a section to help(Matlab) on how to connect
+  through firewalls.  Thanks Bas de Regt at University of Adelaide
+  for the suggestion.
+
+
 Version: 1.5.2 [2011-11-02]
-o CLEANUP: Fixed a R CMD check NOTE that would show up in R v2.15.0 devel.
+o CLEANUP: Fixed an R CMD check NOTE that would show up in R v2.15.0 devel.
 
 
 Version: 1.5.1 [2011-09-27]
@@ -17,8 +73,8 @@ Version: 1.5.0 [2011-09-24]
 o GENERALIZATION: Now readMat() utilizes base::memDecompress() to
   uncompress compressed data structures, unless running R v2.9.x or
   before, in case Rcompression::uncompress() is used, iff installed.
-  Thanks Stephen Eglen at University of Cambridge for reminding me
-  about memDecompress().
+  R v2.10.0 was released October 2009.  Thanks Stephen Eglen at 
+  University of Cambridge for reminding me about memDecompress().
 o CLEANUP: Now using packageStartupMessage() instead of cat().
 
 
