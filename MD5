@@ -1,4 +1,4 @@
-32f8d66892df72d0447b888f6f518e34 *DESCRIPTION
+b8c7790d53c31651674cb2cd836cbd4d *DESCRIPTION
 511f9d6d6003831270db540de4a6a88b *NAMESPACE
 d9dc8eb257bc7c3e068988b6f5ebe3e2 *R/000.R
 36bad70ed1462ea75229e86c91ca7493 *R/006.fixVarArgs.R
@@ -7,7 +7,7 @@ b2509888b807a8e9a2e5b7f15b175af0 *R/999.NonDocumentedObjects.R
 d48004bfa96f75da00bc1fb31fae321d *R/999.package.R
 f9225a138a8f879465fc3f7795273b7b *R/Matlab.R
 8d74fa8bff239449f25d6dab78fe90b7 *R/Sys.setenv.patch.R
-f286b3ec77c1681b6b58d7d37011d238 *R/readMat.R
+a2da0e3ca7e7b57b617c275c77da4ca5 *R/readMat.R
 30ce059deee4acd062e7fc9396e22604 *R/writeMat.R
 98368422c1da4adc9400042e58e60b40 *R/zzz.R
 5135155a71eefccbccfd5d0631e19be9 *incl/BengtssonH_2003.bib.Rdoc
@@ -16,7 +16,7 @@ c5312c8c72c45a57be27f8d490c9e7ac *incl/Matlab.Rex
 74f97ba50de1fa2656a67a5d47e845eb *incl/MatlabServer.out
 d7d6edf07079d0632f0a1d9d62dc6479 *incl/readMat.Rex
 c03f056729d78d2efd29d13233046e7d *incl/writeMat.Rex
-7a54d70b263f14c904f7415204191e4e *inst/NEWS
+76fae2b9d617f7bc12cc1badb4c49c7d *inst/NEWS
 fabc10d0915f34279ca8d7dce7c0b6af *inst/externals/InputStreamByteWrapper.class
 5c765e5d924331117d7f648da2d9d0c4 *inst/externals/InputStreamByteWrapper.java
 7b2fc953d71ca850534c28d55af4aa62 *inst/externals/MatlabServer.m
@@ -62,7 +62,7 @@ d78f718eb1386a0e83d507d259f8885e *man/getOption.Matlab.Rd
 34e9b57944d77256326c6ee2ab094622 *man/getVariable.Matlab.Rd
 a588b3dc6585bfb06e4655e59da2adc8 *man/isOpen.Matlab.Rd
 d04e565a92e8a0d9e524bb660d365b8b *man/open.Matlab.Rd
-e404069254dbadd34147869aa0e40b1b *man/readMat.Rd
+c7234dcdeffc9a97ad05eebd214b91e9 *man/readMat.Rd
 e3990c63addd852db89fd55e7c24e958 *man/readResult.Matlab.Rd
 7adbca41f9f91130630e35995fcd8ac6 *man/setFunction.Matlab.Rd
 23be3f7cb0db0beeefcf00887d8c328f *man/setOption.Matlab.Rd
