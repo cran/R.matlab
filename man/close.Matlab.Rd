@@ -9,9 +9,7 @@
 \name{close.Matlab}
 \alias{close.Matlab}
 \alias{Matlab.close}
-\alias{close.Matlab}
 \alias{close,Matlab-method}
-
 
 \title{Closes connection to Matlab server}
 
@@ -20,7 +18,9 @@
  server can never more be access again.
 }
 
-\usage{\method{close}{Matlab}(con, ...)}
+\usage{
+\method{close}{Matlab}(con, ...)
+}
 
 \arguments{
  \item{...}{Not used.}
@@ -30,7 +30,7 @@
   Returns what \code{\link[R.matlab:close.Matlab]{*close}()} returns.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   For more information see \code{\link{Matlab}}.

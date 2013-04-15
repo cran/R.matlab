@@ -9,9 +9,7 @@
 \name{setFunction.Matlab}
 \alias{setFunction.Matlab}
 \alias{Matlab.setFunction}
-\alias{setFunction.Matlab}
 \alias{setFunction,Matlab-method}
-
 
 \title{Defines a Matlab function}
 
@@ -20,8 +18,10 @@
   containing the specified Matlab function definition.
 }
 
-\usage{\method{setFunction}{Matlab}(this, code, name=NULL, collapse="
-", ...)}
+\usage{
+\method{setFunction}{Matlab}(this, code, name=NULL, collapse="
+", ...)
+}
 
 \arguments{
  \item{code}{The Matlab function definition.}
@@ -53,7 +53,7 @@ print(res)
 
 }}
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   For more information see \code{\link{Matlab}}.

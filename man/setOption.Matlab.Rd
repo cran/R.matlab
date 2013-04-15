@@ -9,9 +9,7 @@
 \name{setOption.Matlab}
 \alias{setOption.Matlab}
 \alias{Matlab.setOption}
-\alias{setOption.Matlab}
 \alias{setOption,Matlab-method}
-
 
 \title{Sets the value of an option}
 
@@ -20,7 +18,9 @@
   "readResult/maxTries". See the \link[R.utils]{Options} class for details.
 }
 
-\usage{\method{setOption}{Matlab}(this, ...)}
+\usage{
+\method{setOption}{Matlab}(this, ...)
+}
 
 \arguments{
  \item{...}{Arguments passed to
@@ -45,7 +45,7 @@
  30 seconds for a reply from the Matlab server before giving up.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   \code{\link[R.matlab:getOption.Matlab]{*getOption}()}.

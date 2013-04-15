@@ -30,7 +30,9 @@ extends \link[R.oo]{Object}\cr
 
  }
 
- \usage{Matlab(host="localhost", port=9999, remote=!(host \%in\% c("localhost", "127.0.0.1")))}
+ \usage{
+Matlab(host="localhost", port=9999, remote=!(host \%in\% c("localhost", "127.0.0.1")))
+}
 
  \arguments{
    \item{host}{Name of host to connect to.}
@@ -63,6 +65,7 @@ extends \link[R.oo]{Object}\cr
 
  \bold{Methods inherited from Object}:\cr
 $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCache, clone, detach, equals, extend, finalize, gc, getEnvironment, getFieldModifier, getFieldModifiers, getFields, getInstantiationTime, getStaticInstance, hasField, hashCode, ll, load, objectSize, print, registerFinalizer, save
+
 
  }
 
@@ -335,7 +338,7 @@ close(matlab)
 print(matlab)
 }}
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+ \author{Henrik Bengtsson}
 
  \seealso{
    Stand-alone methods \code{\link{readMat}}() and \code{\link{writeMat}}()

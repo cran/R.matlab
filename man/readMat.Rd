@@ -43,7 +43,9 @@
  may avoid this problem as well.
 }
 
-\usage{\method{readMat}{default}(con, maxLength=NULL, fixNames=TRUE, verbose=FALSE, sparseMatrixClass=c("Matrix", "SparseM", "matrix"), ...)}
+\usage{
+\method{readMat}{default}(con, maxLength=NULL, fixNames=TRUE, verbose=FALSE, sparseMatrixClass=c("Matrix", "SparseM", "matrix"), ...)
+}
 
 \arguments{
   \item{con}{Binary \code{\link[base:connections]{connection}} from which the MAT file structure should be
@@ -87,13 +89,12 @@ print(data)
 }
 
 \author{
-  Henrik Bengtsson, Mathematical Statistics, Lund University.
+  Henrik Bengtsson.
   The internal MAT v4 reader was written by
-  Andy Jacobson at Program in Atmospheric and Oceanic Sciences,
-  Princeton University.
+  Andy Jacobson (Princeton University).
   Support for reading compressed files via \pkg{Rcompression},
   sparse matrices and UTF-encoded strings was added by
-  Jason Riedy, UC Berkeley.
+  Jason Riedy (UC Berkeley).
 }
 
 \seealso{

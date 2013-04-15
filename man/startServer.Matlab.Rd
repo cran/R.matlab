@@ -6,12 +6,11 @@
 % by the Rdoc compiler part of the R.oo package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\name{startServer.Matlab}
+\name{Matlab$startServer}
+\alias{Matlab$startServer}
 \alias{startServer.Matlab}
 \alias{Matlab.startServer}
-\alias{startServer.Matlab}
 \alias{startServer,Matlab-method}
-
 
 \title{Static method which starts a Matlab server}
 
@@ -21,8 +20,13 @@
  Java.
 }
 
-\synopsis{startServer.Matlab(this, matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...)}
-\usage{Matlab$startServer(matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...)}
+\usage{
+## Static method (use this):
+## Matlab$startServer(matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...)
+
+## Don't use the below:
+\method{startServer}{Matlab}(this, matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...)
+}
 
 \arguments{
  \item{matlab}{An optional \code{\link[base]{character}} string specifying the name of
@@ -64,7 +68,7 @@
   where Matlab is started, copies of them will automatically be made.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   For more information see \code{\link{Matlab}}.

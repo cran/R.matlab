@@ -9,9 +9,7 @@
 \name{getOption.Matlab}
 \alias{getOption.Matlab}
 \alias{Matlab.getOption}
-\alias{getOption.Matlab}
 \alias{getOption,Matlab-method}
-
 
 \title{Gets the value of an option}
 
@@ -22,7 +20,9 @@
   See the \link[R.utils]{Options} class for details.
 }
 
-\usage{\method{getOption}{Matlab}(this, ...)}
+\usage{
+\method{getOption}{Matlab}(this, ...)
+}
 
 \arguments{
  \item{...}{Arguments passed to
@@ -34,7 +34,7 @@
   Returns the value of the option.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   \code{\link[R.matlab:setOption.Matlab]{*setOption}()}.

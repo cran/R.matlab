@@ -9,9 +9,7 @@
 \name{evaluate.Matlab}
 \alias{evaluate.Matlab}
 \alias{Matlab.evaluate}
-\alias{evaluate.Matlab}
 \alias{evaluate,Matlab-method}
-
 
 \title{Evaluates a Matlab expression}
 
@@ -26,7 +24,9 @@
  but kept receiving nothing}, see "Troubleshooting" under ?R.matlab.
 }
 
-\usage{\method{evaluate}{Matlab}(this, ..., collapse=";")}
+\usage{
+\method{evaluate}{Matlab}(this, ..., collapse=";")
+}
 
 \arguments{
   \item{...}{One or several string with Matlab expressions. If several
@@ -40,7 +40,7 @@
   An exception might also be thrown.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   For more information see \code{\link{Matlab}}.
