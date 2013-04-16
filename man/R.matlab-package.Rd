@@ -15,7 +15,7 @@
 
 
  \description{
-   This package provides methods to read and write MAT files.  It also makes it possible to communicate (evaluate code, send and retrieve objects etc.) with Matlab v6 or higher running locally or on a remote host.
+   This package provides methods readMat() and writeMat() to read and write MAT files.  It also makes it possible to communicate (evaluate code, send and retrieve objects etc.) with Matlab v6 or higher running locally or on a remote host.
 
    In brief, this package provides a one-directional interface from
    \R to Matlab, with communication taking place via a TCP/IP connection
@@ -177,7 +177,7 @@
    "release" license above.
  }
 
- \author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+ \author{Henrik Bengtsson}
 
  \section{References}{
  [1] H. Bengtsson, \emph{The R.oo package - Object-Oriented Programming with References Using Standard R Code}, In Kurt Hornik, Friedrich Leisch and Achim Zeileis, editors, Proceedings of the 3rd International Workshop on Distributed Statistical Computing (DSC 2003), March 20-22, Vienna, Austria. \url{http://www.ci.tuwien.ac.at/Conferences/DSC-2003/Proceedings/}

@@ -9,9 +9,7 @@
 \name{readResult.Matlab}
 \alias{readResult.Matlab}
 \alias{Matlab.readResult}
-\alias{readResult.Matlab}
 \alias{readResult,Matlab-method}
-
 
 \title{Reads results from the Matlab server}
 
@@ -21,7 +19,9 @@
  This method is for internal use only.
 }
 
-\usage{\method{readResult}{Matlab}(this, ...)}
+\usage{
+\method{readResult}{Matlab}(this, ...)
+}
 
 \arguments{
  \item{...}{Not used.}
@@ -31,7 +31,7 @@
   Returns an \R object.
 }
 
-\author{Henrik Bengtsson (\url{http://www.braju.com/R/})}
+\author{Henrik Bengtsson}
 
 \seealso{
   For more information see \code{\link{Matlab}}.
