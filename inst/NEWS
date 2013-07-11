@@ -1,11 +1,39 @@
 Package: R.matlab
 =================
 
+Version: 2.0.1 [2013-07-11]
+o Updated all documentation and messages to use 'MATLAB' instead 
+  of 'Matlab'.
+o Now the 'INTERNAL ERROR' message that people forward to the package
+  maintainer also includes the version of the R.matlab package.
+o Bumped up package dependencies.
+
+
+Version: 2.0.0 [2013-05-25]
+o SPEEDUP: Made readMat() significant faster. More than 15x speedup(!)
+  is observed on MAT files with many small structures.  This was
+  achieved by (i) dramatically decreasing the amount of memory allocation
+  and garbage collection needed by the internal raw buffer mechanism,
+  by (ii) dropping an internal rm() calls that was called very often,
+  as well as by (iii) minimizing the number of times local functions and
+  objects are created.
+o Now readMat() also accepts a raw vector as input.
+o Now readMat() no longer generates warnings reporting on "In readBin(
+  con = rawBufferT, what = what, size = size, n = n, signed = signed,  :
+  'signed = FALSE' is only valid for integers of sizes 1 and 2."
+o DOCUMENTATION: Restructured help("readMat").  Added a section on
+  'Speed performance'.
+
+
+Version: 1.7.1 [2013-05-20]
+o CRAN POLICY: Now all Rd \usage{} lines are at most 90 characters long.
+
+
 Version: 1.7.0 [2013-04-15]
 o readMat() now support reading 64-bit integers [array type (class)
   'mxINT64_CLASS' and 'mxUINT64_CLASS'] on machines/versions of R
   with .Machine$sizeof.long >= 8 or .Machine$sizeof.longlong >= 8.
-o Package utilizes new startupMessage() of R.oo. 
+o Package utilizes new startupMessage() of R.oo.
 o ROBUSTNESS: Now nearly all S3 methods are declared properly in
   the namespace.
 
@@ -16,12 +44,12 @@ o DOCUMENTATION: Updated the help usage section for all static methods.
 
 
 Version: 1.6.3 [2013-01-17]
-o Bumped package dependencies.
+o Bumped up package dependencies.
 
 
 Version: 1.6.2 [2012-12-02]
 o CLEANUP: R CMD check no longer warns on global assignments.
-o Bumped package dependencies.
+o Bumped up package dependencies.
 
 
 Version: 1.6.1 [2012-06-30]
@@ -224,7 +252,7 @@ o Now the first pass in writeMat() that counts the number of
   most common use case, will no longer involve the counting.
   Thank to Adam Grossman at Stanford University for suggesting
   the modification and providing initial code.  He reports
-  a substantial speed up in writing large files (38MB file).
+  a substantial speedup in writing large files (38MB file).
 o CLEAN UP: Removed internal debugging/asserting code.
 o Renamed the HISTORY file to NEWS.
 

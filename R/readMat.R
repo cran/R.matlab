@@ -4,46 +4,26 @@
 # @title "Reads a MAT file structure from a connection or a file"
 #
 # \description{
-#  Reads a MAT file structure from an input stream, either until End of File
-#  is detected or until \code{maxLength} bytes has been read.
-#  Using \code{maxLength} it is possible to read MAT file structure over
-#  socket connections and other non-terminating input streams. In such cases
-#  the \code{maxLength} has to be communicated before sending the actual
-#  MAT file structure.
-#
+#  @get "title".
 #  Both the MAT version 4 and MAT version 5 file formats are
-#  supported. The implementation is based on [1].
-#
-#  From Matlab v7, \emph{compressed} MAT version 5 files are used by
-#  default [3].  This function supports reading such files,
-#  if running R v2.10.0 or newer.
-#  For older versions of R, the \pkg{Rcompression} package is used.
-#  To install that package, please see instructions at
-#  \url{http://www.omegahat.org/cranRepository.html}.
-#  As a last resort, use \code{save -V6} in Matlab to write MAT files
-#  that are compatible with Matlab v6, that is, to write
-#  non-compressed MAT version 5 files.
-#
-#  Note: Do not mix up version numbers for the Matlab software and
-#  the Matlab file formats.
-#
-#  Recent versions of Matlab store some strings using Unicode
-#  encodings.  If the R installation supports \code{\link{iconv}},
-#  these strings will be read correctly.  Otherwise non-ASCII codes
-#  are converted to NA.  Saving to an earlier file format version
-#  may avoid this problem as well.
+#  supported. The implementation is based on [1-4].
+#  Note: Do not mix up version numbers for the MATLAB software and
+#  the MATLAB file formats.
 # }
 #
 # @synopsis
 #
 # \arguments{
-#   \item{con}{Binary @connection from which the MAT file structure should be
-#     read. A string is interpreted as filename, which then will be
-#     opened (and closed afterwards).}
+#   \item{con}{Binary @connection from which the MAT file structure
+#     should be read.
+#     If a @character string, it is interpreted as filename, which then
+#     will be opened (and closed afterwards).
+#     If a @raw @vector, it will be read via as a raw binary @connection.
+#   }
 #   \item{maxLength}{The maximum number of bytes to be read from the input
 #     stream, which should be equal to the length of the MAT file structure.
 #     If \code{NULL}, data will be read until End Of File has been reached.}
-#   \item{fixNames}{If @TRUE, underscores within names of Matlab variables
+#   \item{fixNames}{If @TRUE, underscores within names of MATLAB variables
 #     and fields are converted to periods.}
 #   \item{verbose}{Either a @logical, a @numeric, or a @see "R.utils::Verbose"
 #     object specifying how much verbose/debug information is written to
@@ -65,9 +45,53 @@
 #   MAT file structure.
 # }
 #
-# \details{
+# \section{Speed performance}{
+#   This function uses a MAT file parser implemented completely using
+#   pure R. For MAT files containing large vectorized objects, for instance
+#   long vectors and large matrices, the R implementation is indeed fast
+#   enough because it can read and parse each such objects in one go.
+#
+#   On the other hand, for MAT files containing a large number of small
+#   objects, e.g. a large number of cell structures, there will be a
+#   signifant slowdown, because each of the small objects has to be
+#   parsed individually.
+#   In such cases, if possible, try to (re)save the data in MATLAB
+#   using larger ("more vectorized") objects.
+# }
+#
+# \section{MAT cell structures}{
 #   For the MAT v5 format, \emph{cell} structures are read into
 #   \R as a @list structure.
+# }
+#
+# \section{Unicode strings}{
+#  Recent versions of MATLAB store some strings using Unicode
+#  encodings.  If the R installation supports \code{\link{iconv}},
+#  these strings will be read correctly.  Otherwise non-ASCII codes
+#  are converted to NA.  Saving to an earlier file format version
+#  may avoid this problem as well.
+# }
+#
+# \section{Reading compressed MAT files}{
+#  From MATLAB v7, \emph{compressed} MAT version 5 files are used by
+#  default [3,4].  This function supports reading such files,
+#  if running R v2.10.0 or newer.
+#  For older versions of R, the \pkg{Rcompression} package is used.
+#  To install that package, please see instructions at
+#  \url{http://www.omegahat.org/cranRepository.html}.
+#
+#  As a last resort, use \code{save -V6} in MATLAB to write MAT files
+#  that are compatible with MATLAB v6, that is, to write
+#  non-compressed MAT version 5 files.
+# }
+#
+# \section{Reading MAT file structures input streams}{
+#  Reads a MAT file structure from an input stream, either until End of File
+#  is detected or until \code{maxLength} bytes has been read.
+#  Using \code{maxLength} it is possible to read MAT file structure over
+#  socket connections and other non-terminating input streams. In such cases
+#  the \code{maxLength} has to be communicated before sending the actual
+#  MAT file structure.
 # }
 #
 # @examples "../incl/readMat.Rex"
@@ -86,10 +110,10 @@
 # }
 #
 # \references{
-#   [1] The MathWorks Inc., \emph{Matlab - MAT-File Format, version 5}, June 1999.\cr
-#   [2] The MathWorks Inc., \emph{Matlab - Application Program Interface Guide, version 5}, 1998.\cr
-#   [3] The MathWorks Inc., \emph{Matlab - MAT-File Format, version 7}, September 2009, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
-#   [4] The MathWorks Inc., \emph{Matlab - MAT-File Format, version R2012a}, September 2012, \url{http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf}\cr
+#   [1] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version 5}, June 1999.\cr
+#   [2] The MathWorks Inc., \emph{MATLAB - Application Program Interface Guide, version 5}, 1998.\cr
+#   [3] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version 7}, September 2009, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
+#   [4] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version R2012a}, September 2012, \url{http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf}\cr
 # }
 #
 # @keyword file
@@ -108,7 +132,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # willRead(), hasHead() and isDone() operators keep count on the number of
   # bytes actually read and compares it with 'maxLength'.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  nbrOfBytesRead <- 0;
+  nbrOfBytesRead <- 0L;
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # readBinMat() need to know what endian the numerics in the stream are
@@ -162,8 +186,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # a warning.  However, for backward compatibility we will still use it
   # for version prior to R v2.7.0.  See also email from Brian Ripley
   # on 2008-04-23 on this problem.
-  if (compareVersion(as.character(getRversion()), "2.7.0") < 0) {
-    ASCII[1] <- eval(parse(text="\"\\000\""));
+  if (getRversion() < "2.7.0") {
+    ASCII[1L] <- eval(parse(text="\"\\000\""));
   }
 
 
@@ -171,7 +195,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # sapply(X, ...) function that treats length(X) == 0 specially
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   sapply0 <- function(X, FUN, ...) {
-    if (length(X) == 0) {
+    if (length(X) == 0L) {
       FUN(X, ...);
     } else {
       base::sapply(X, FUN=FUN, ...);
@@ -184,13 +208,32 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # Extracted from the R.oo package.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   intToChar <- function(i) {
-    ASCII[i %% 256 + 1];
+    ASCII[i %% 256 + 1L];
   }
+
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Gets a vector of bits for an integer
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##   getBits <- function(i, nbits) {
+##     ready <- FALSE;
+##     bits <- integer(nbits);
+##     while (!ready) {
+##       bit <- i %% 2;
+##       bits <- c(bits, bit);
+##       i <- i %/% 2;
+##       ready <- (i == 0L);
+##     }
+##     bits <- as.integer(bits);
+##     bits;
+##   } # getBits()
+
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Function to assert that it is possible to read a certain number of bytes.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   willRead <- function(nbrOfBytes) {
+      return()
     if (is.null(maxLength))
       return();
     if (nbrOfBytesRead + nbrOfBytes <= maxLength)
@@ -202,6 +245,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # Function to tell now many bytes we actually have read.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   hasRead <- function(nbrOfBytes) {
+      return()
     nbrOfBytesRead <<- nbrOfBytesRead + nbrOfBytes;
     if (is.null(maxLength))
       return(TRUE);
@@ -218,29 +262,137 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   } # isDone()
 
 
-
   rawBuffer <- NULL;
-  fillRawBuffer <- function(need) {
-    n <- length(rawBuffer);
-    missing <- (need - n);
-    if (missing < 0) {
-      verbose && cat(verbose, level=-500, "Not filling, have enough data.")
-      return(NULL);
+  rawBufferSize <- getOption("R.matlab::readMat/rawBufferSize", 10e6);
+  rawBufferMethod <- getOption("R.matlab::readMat/rawBufferMethod", "1.8.0");
+
+  if (rawBufferMethod == "1.7.1") {
+    fillRawBuffer <- function(need) {
+      nTotal <- length(rawBuffer);
+      nMissing <- (need - nTotal);
+      if (nMissing < 0L) {
+        verbose && cat(verbose, level=-500, "Not filling, have enough data.")
+        return(NULL);
+      }
+      nRead <- max(nMissing, rawBufferSize);
+      raw <- readBin(con=con, what=raw(), n=nRead);
+      if (length(raw) > 0L) {
+        rawBuffer <<- c(rawBuffer, raw);
+      }
+      NULL;
     }
-    raw <- readBin(con=con, what=raw(), n=missing);
-    rawBuffer <<- c(rawBuffer, raw);
-    NULL;
-  }
-  eatRawBuffer <- function(eaten) {
-    n <- length(rawBuffer);
-    if (eaten < n) {
-      rawBuffer <<- rawBuffer[(eaten+1):n];
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Function to push back a raw vector to the main input stream
+    # This is used to push back a decompressed stream of data.
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    pushBackRawMat <- function(con, raw) {
+      if (length(raw) > 0L) {
+        rawBuffer <<- c(raw, rawBuffer);
+      }
+      NULL;
+    } # pushBackRawMat()
+
+    readRawBuffer <- function(nbrOfBytes) {
+      nTotal <- length(rawBuffer);
+      # Nothing to read? [nTotal == 0 is a special case for reaching EoF]
+      if (nbrOfBytes == 0L || nTotal == 0L) {
+        return(raw(0L));
+      }
+      # Sanity check
+      ### stopifnot(nbrOfBytes <= nTotal);
+      rawBuffer[1:nbrOfBytes];
     }
-    else {
-      rawBuffer <<- NULL;
+
+    eatRawBuffer <- function(eaten) {
+      nTotal <- length(rawBuffer);
+      if (eaten < nTotal) {
+        rawBuffer <<- rawBuffer[(eaten+1L):nTotal];
+      } else {
+        rawBuffer <<- raw(0L);
+      }
+      NULL;
     }
-    NULL;
-  }
+  } else if (rawBufferMethod == "1.8.0") {
+    rawBufferOffset <- 0L;
+
+    shortenRawBuffer <- function() {
+      # Shorten existing raw buffer?
+      nTotal <- length(rawBuffer);
+      if (rawBufferOffset > 0L && nTotal > 0L) {
+        idxs <- (rawBufferOffset+1L):nTotal;
+        rawBuffer <<- rawBuffer[idxs];
+        rawBufferOffset <<- 0L;
+      }
+      ### stopifnot(rawBufferOffset == 0L);
+      NULL;
+    } # shortenRawBuffer()
+
+    fillRawBuffer <- function(need) {
+      nTotal <- length(rawBuffer);
+      nAvail <- nTotal - rawBufferOffset;
+      nMissing <- (need - nAvail);
+      if (nMissing <= 0L) {
+        verbose && cat(verbose, level=-500, "Not filling, have enough data.")
+        return(NULL);
+      }
+
+      # Read and append, if more data exists
+      nRead <- max(nMissing, rawBufferSize);
+      raw <- readBin(con=con, what=raw(), n=nRead);
+      if (length(raw) > 0L) {
+        shortenRawBuffer();
+        rawBuffer <<- c(rawBuffer, raw);
+      }
+
+      NULL;
+    }
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Function to push back a raw vector to the main input stream
+    # This is used to push back a decompressed stream of data.
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    pushBackRawMat <- function(con, raw) {
+      if (length(raw) > 0L) {
+        shortenRawBuffer();
+        # Insert pushback 'raw' data
+        rawBuffer <<- c(raw, rawBuffer);
+        rawBufferOffset <<- 0L;
+      }
+      NULL;
+    } # pushBackRawMat()
+
+    readRawBuffer <- function(nbrOfBytes) {
+      nTotal <- length(rawBuffer);
+      # Nothing to read?
+      if (nTotal == 0L) {
+        return(raw(0L));
+      }
+      # Sanity check
+      ### stopifnot(nbrOfBytes <= nTotal);
+      idxs <- seq.int(from=rawBufferOffset+1L, to=rawBufferOffset+nbrOfBytes, by=1L);
+      ### stopifnot(length(idxs) == nbrOfBytes);
+      rawBuffer[idxs];
+    }
+
+    eatRawBuffer <- function(eaten) {
+      nTotal <- length(rawBuffer);
+      nAvail <- nTotal - rawBufferOffset;
+      if (eaten < nAvail) {
+        rawBufferOffset <<- rawBufferOffset + eaten;
+        # Sanity check
+        ### stopifnot(rawBufferOffset <= nTotal);
+      } else if (eaten == nAvail) {
+        rawBuffer <<- raw(0L);
+        rawBufferOffset <<- 0L;
+      } else {
+        stop("INTERNAL ERROR: More bytes was read from the raw buffer than existed: ", eaten, " > ", nAvail);
+      }
+      NULL;
+    }
+  } else {
+    throw("Unkown value of option' R.matlab::readMat/rawBufferMethod': ", rawBufferMethod);
+  } # if (rawBufferMethod ...)
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -248,21 +400,33 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # and size 'size', cf. readBin().
   # This function will also keep track of the actual number of bytes read.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  readBinMat <- function(con, what, size=1, n, signed=TRUE, endian=detectedEndian) {
-    # Check maxLength to see if we are done.
-    if (isDone())
+  readBinMat <- function(con, what, size=1L, n, signed=TRUE, endian=detectedEndian) {
+    # Nothing to do?
+    if (n == 0L || isDone()) {
       return(c());
-    if (is.na(signed))
+    }
+
+    if (is.na(signed)) {
       signed <- TRUE;
-    willRead(size*n);
+    } else if (!signed && size > 2L && typeof(what) == "integer") {
+      # Avoid warnings
+      signed <- TRUE;
+    }
 
-    fillRawBuffer(size*n);
+    nbrOfBytes <- size*n;
+    willRead(nbrOfBytes);
+    fillRawBuffer(nbrOfBytes);
 
-    bfr <- readBin(con=rawBuffer, what=what, size=size, n=n, signed=signed, endian=endian);
-#    print(list(size=size, n=n, signed=signed, endian=endian, bfr=bfr));
-    eatRawBuffer(size*n);
+    # Extract the subset to read
+    rawBufferT <- readRawBuffer(nbrOfBytes);
+    bfr <- readBin(con=rawBufferT, what=what, size=size, n=n, signed=signed, endian=endian);
+    nbfr <- length(bfr);
+    if (nbfr > 0L) {
+      ### stopifnot(nbfr == n && nbfr*size == nbrOfBytes);
+      eatRawBuffer(nbfr*size);
+      hasRead(nbfr*size);
+    }
 
-    hasRead(length(bfr)*size);
     bfr;
   } # readBinMat()
 
@@ -272,18 +436,28 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   readCharMat <- function(con, nchars) {
     # Check maxLength to see if we are done.
-    if (isDone())
-      return(c());
+    if (nchars == 0L || isDone()) {
+      return(character(0L));
+    }
 
     willRead(nchars);
     fillRawBuffer(nchars);
-    bfr <- rawBuffer[1:nchars];
-    bfr <- as.integer(bfr);
-    bfr <- intToChar(bfr);
-    bfr <- paste(bfr, collapse="");
-#    bfr <- readChar(con=rawBuffer, nchars=nchars);
+
+    # Extract the subset to read
+    bfr <- readRawBuffer(nchars);
+
+    ### stopifnot(length(bfr) == nchars);
+
+    # Coerce to a string
+    bfr <- rawToChar(bfr);
+    ## Was:
+    ## bfr <- as.integer(bfr);
+    ## bfr <- intToChar(bfr);
+    ## bfr <- paste(bfr, collapse="");
+
     eatRawBuffer(nchars);
     hasRead(nchars);
+
     bfr;
   } # readCharMat()
 
@@ -291,17 +465,31 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   ## convert* are internal helper functions.  They handle type dispatch
   ## and defaults for charset conversions.
   convertUTF8 <- function(ary) {
-    ary <- intToChar(as.integer(ary));
-    if (length(ary) > 0) {
-      ary <- paste(ary, collapse="");
+    if (length(ary) > 0L) {
+      ary <- as.raw(ary);
+      ary <- rawToChar(ary);
+    } else {
+      ary <- "";
     }
     Encoding(ary) <- "UTF-8";
     ary;
   }
+##   Was:
+##   convertUTF8 <- function(ary) {
+##     if (length(ary) > 0L) {
+##       ary <- as.integer(ary);
+##       ary <- intToChar(ary);
+##       ary <- paste(ary, collapse="");
+##     } else {
+##       ary <- "";
+##     }
+##     Encoding(ary) <- "UTF-8";
+##     ary;
+##   }
 
   convertGeneric <- function(ary) {
     ## Set entires outside the ASCII range to NA except for NUL.
-    ary[ary>127|(ary!=0&ary<32)] <- NA;
+    ary[ary > 127L | (ary != 0L & ary < 32L)] <- NA_integer_;
     convertUTF8(ary);
   }
 
@@ -312,25 +500,24 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     utfs <- grep("UTF", iconvlist(), value=TRUE);
     ## The convertUTF{16,32} routines below work in big-endian, so
     ## look for UTF-16BE or UTF16BE, etc..
-    has.utf16 <- utils::head(grep("UTF-?16BE", utfs, value=TRUE), n=1);
-    has.utf32 <- utils::head(grep("UTF-?32BE", utfs, value=TRUE), n=1);
-    rm(utfs);
-    if (length(has.utf16) > 0) {
+    has.utf16 <- utils::head(grep("UTF-?16BE", utfs, value=TRUE), n=1L);
+    has.utf32 <- utils::head(grep("UTF-?32BE", utfs, value=TRUE), n=1L);
+    if (length(has.utf16) > 0L) {
       convertUTF16 <- function(ary) {
         n <- length(ary);
         ary16 <- paste(intToChar(c(sapply(ary,
-                                          function(x) { c(x%/%2^8,
-                                                          x%%2^8); }))),
+                                          function(x) { c(x%/%256,
+                                                          x%%256); }))),
                        collapse="");
         iconv(ary16, has.utf16, "UTF-8");
       }
       convertUTF32 <- function(ary) {
         n <- length(ary);
         ary32 <- paste(intToChar(c(sapply(ary,
-                                          function(x) { c((x%/%2^24)%%2^8,
-                                                          (x%/%2^16)%%2^8,
-                                                          (x%/%2^8)%%2^8,
-                                                          x%%2^8); }))),
+                                          function(x) { c((x%/%16777216)%%256,
+                                                          (x%/%65536)%%256,
+                                                          (x%/%256)%%256,
+                                                          x%%256); }))),
                        collapse="");
         iconv(ary32, has.utf32, "UTF-8");
       }
@@ -367,22 +554,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   }
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # Function to push back a raw vector to the main input stream
-  # This is used to push back a decompressed stream of data.
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  pushBackRawMat <- function(con, raw) {
-    rawBuffer <<- c(raw, rawBuffer);
-    NULL;
-  } # pushBackRawMat()
-
-
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Function to make a variable name into a safe R variable name.
   # For instance, underscores ('_') are replaced by periods ('.').
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   asSafeRName <- function(name) {
     if (fixNames) {
-      name <- gsub("_", ".", name);
+      name <- gsub("_", ".", name, fixed=TRUE);
     }
     name;
   }
@@ -408,7 +585,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   uncompressMemDecompress <- function(zraw, asText=TRUE, type="gzip", ...) {
     # To please R CMD check for R versions before R v2.10.0
-    memDecompress <- NULL; rm(memDecompress);
+    memDecompress <- NULL; rm(list="memDecompress");
     unzraw <- memDecompress(zraw, type=type, asChar=asText, ...);
     unzraw;
   } # uncompressMemDecompress()
@@ -421,7 +598,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     # TRICK: Hide 'Rcompression' from R CMD check
     pkgName <- "Rcompression";
     if (!require(pkgName, character.only=TRUE, quietly=TRUE)) {
-      throw("Cannot read compressed data.  Omegahat.org package 'Rcompression' could not be loaded.  Alternatively, save your data in a non-compressed format by specifying -V6 when calling save() in Matlab or Octave.");
+      throw("Cannot read compressed data.  Omegahat.org package 'Rcompression' could not be loaded.  Alternatively, save your data in a non-compressed format by specifying -V6 when calling save() in MATLAB or Octave.");
     }
 
     # Argument 'delta':
@@ -460,10 +637,6 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           errorMsg <- paste("Failed to uncompress data: ", msg, sep="");
           throw(errorMsg);
         }
-
-        # Garbage collect
-        gc();
-
         # ...but it could be that there is not enough memory
         lastException <<- ex;
       }) # tryCatch()
@@ -492,18 +665,18 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 
   # Override with available methods
-  decompressWith <- getOption("R.matlab::decompressWith", c("memDecompress", "Rcompression"));
+  decompressWith <- getOption("R.matlab::readMat/decompressWith", c("memDecompress", "Rcompression"));
 
   # Validate option
   if (is.character(decompressWith)) {
   } else if (is.function(decompressWith)) {
   } else {
-    throw("Unknown mode of 'R.matlab::decompressWith': ", mode(decompressWith));
+    throw("Unknown mode of 'R.matlab::readMat/decompressWith': ", mode(decompressWith));
   }
 
   decompressWith0 <- decompressWith;
 
-  if (length(decompressWith) > 0) {
+  if (length(decompressWith) > 0L) {
     if (is.character(decompressWith)) {
       # Is memDecompress() available?
       # memDecompress() was introduced in R v2.10.0
@@ -524,12 +697,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
       # Select decompression method
       if (is.character(decompressWith)) {
-        if (decompressWith[1] == "memDecompress") {
+        if (decompressWith[1L] == "memDecompress") {
           uncompress <- uncompressMemDecompress;
-          attr(uncompress, "label") <- decompressWith[1];
-        } else if (decompressWith[1] == "Rcompression") {
+          attr(uncompress, "label") <- decompressWith[1L];
+        } else if (decompressWith[1L] == "Rcompression") {
           uncompress <- uncompressRcompression;
-          attr(uncompress, "label") <- decompressWith[1];
+          attr(uncompress, "label") <- decompressWith[1L];
         } else {
           # Don't throw an exception here, because it may be
           # that the MAT files is not compressed.
@@ -540,15 +713,15 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       attr(uncompress, "label") <- "<function>";
 
     }
-  } # if (length(decompressWith) > 0)
+  } # if (length(decompressWith) > 0L)
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Debug functions
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  debugIndent <- 0;
+  debugIndent <- 0L;
   debug <- function(..., sep="") {
-    if (debugIndent > 0)
+    if (debugIndent > 0L)
       cat(paste(rep(" ", length.out=debugIndent), collapse=""));
     cat(..., sep=sep);
     cat("\n");
@@ -562,12 +735,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     str(...);
   }
 
-  debugEnter <- function(..., indent=+1) {
+  debugEnter <- function(..., indent=+1L) {
     debug(..., "...");
     debugIndent <<- debugIndent + indent;
   }
 
-  debugExit <- function(..., indent=-1) {
+  debugExit <- function(..., indent=-1L) {
     debugIndent <<- debugIndent + indent;
     debug(..., "...done\n");
   }
@@ -587,8 +760,107 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   #  these bytes contain a zero, MATLAB will incorrectly assume the file is
   #  a Version 4 MAT-file."
   isMat4 <- function(MOPT) {
-    any(MOPT == 0);
+    any(MOPT == 0L);
   }
+
+
+  # Debug function to generate more informative error messages.
+  moptToString <- function(MOPT) {
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # MOPT[1] "indicates the numeric format of binary numbers on the machine
+    #          that wrote the file.
+    #          0 IEEE Little Endian (PC, 386, 486, DEC Risc)
+    #          1 IEEE Big Endian (Macintosh, SPARC, Apollo,SGI, HP 9000/300,
+    #            other Motorola)
+    #          2 VAX D-float  [don't know how to read these]
+    #          3 VAX G-float  [don't know how to read these]
+    #          4 Cray         [don't know how to read these]"
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MOPT1 <- MOPT[1L];
+    if (MOPT1 == 0L)
+      mStr <- "IEEE Little Endian (PC, 386, 486, DEC Risc)"
+    else if (MOPT1 == 1L)
+      mStr <- "IEEE Big Endian (Macintosh, SPARC, Apollo,SGI, HP 9000/300, other Motorola)"
+    else if (MOPT1 == 2L)
+      mStr <- "VAX D-float"
+    else if (MOPT1 == 3L)
+      mStr <- "VAX G-float"
+    else if (MOPT1 == 4L)
+      mStr <- "Cray"
+    else
+      mStr <- sprintf("<Unknown value of MOPT[1]. Not in range [0,4]: %d.>", as.integer(MOPT1));
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # MOPT[2] "is always 0 (zero) and is reserved for future use."
+    #
+    # I've only seen a non-default value for ocode used once, by a
+    # matfile library external to the MathWorks.  I believe it stands
+    # for "order" code...whether a matrix is written in row-major or
+    # column-major format.  Its value here will be ignored. /Andy November 2003
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    if (MOPT[2L] == 0L)
+      oStr <- "Reserved for future use"
+    else
+      oStr <- sprintf("<Unknown value of MOPT[2]. Should be 0: %d.>", as.integer(MOPT[2L]));
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # MOPT[3] "indicates which format the data is stored in according to the
+    #          following table:
+    #          0 double-precision (64-bit) floating point numbers
+    #          1 single-precision (32-bit) floating point numbers
+    #          2 32-bit signed integers
+    #          3 16-bit signed integers
+    #          4 16-bit unsigned integers
+    #          5 8-bit unsigned integers
+    #          The precision used by the save command depends on the size and
+    #          type of each matrix. Matrices with any noninteger entries and
+    #          matrices with 10,000 or fewer elements are saved in floating
+    #          point formats requiring 8 bytes per real element. Matrices
+    #          with all integer entries and more than 10,000 elements are
+    #          saved in the following formats, requiring fewer bytes per element."
+    #
+    # precision defines the number of type of data written and thus the number of
+    # bytes per datum.
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MOPT3 <- MOPT[3L];
+    if (MOPT3 == 0L)
+      pStr <- "64-bit double"
+    else if (MOPT3 == 1L)
+      pStr <- "32-bit single"
+    else if (MOPT3 == 2L)
+      pStr <- "32-bit signed integer"
+    else if (MOPT3 == 3L)
+      pStr <- "16-bit signed integer"
+    else if (MOPT3 == 4L)
+      pStr <- "16-bit unsigned integer"
+    else if (MOPT3 == 5L)
+      pStr <- "8-bit unsigned integer"
+    else
+      pStr <- sprintf("<Unknown value of MOPT[3]. Not in range [0,5]: %d.>", as.integer(MOPT3));
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # MOPT[4]  "indicates the matrix type according to the following table:
+    #          0 Numeric (Full) matrix
+    #          1 Text matrix
+    #          2 Sparse matrix
+    #          Note that the elements of a text matrix are stored as floating
+    #          point numbers between 0 and 255 representing ASCII-encoded
+    #          characters."
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MOPT4 <- MOPT[4L];
+    if (MOPT4 == 0L)
+      tStr <- "Numeric (Full) matrix"
+    else if (MOPT4 == 1L)
+      tStr <- "Text matrix"
+    else if (MOPT4 == 2L)
+      tStr <- "Sparse matrix"
+    else
+      tStr <- sprintf("<Unknown value of MOPT[4]. Not in range [0,2]: %d.>", as.integer(MOPT4));
+
+
+    moptStr <- paste("MOPT[1]: ", mStr, ". MOPT[2]: ", oStr, ". MOPT[3]: ", pStr, ". MOPT[4]: ", tStr, ".", sep="");
+    moptStr;
+  } # moptToString()
 
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -596,17 +868,17 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # endian order into a (MOPT) vector c(M,O,P,T) of unsigned integers.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   getMOPT <- function(fourBytes) {
-    if (length(fourBytes) != 4)
+    if (length(fourBytes) != 4L)
       stop("Argument 'fourBytes' must a vector of 4 bytes: ", length(fourBytes));
 
     # Make sure the four bytes are non-signed integers
     fourBytes <- as.integer(fourBytes);
-    neg <- (fourBytes < 0);
+    neg <- (fourBytes < 0L);
     if (any(neg))
-      fourBytes[neg] <- fourBytes[neg] + 256;
+      fourBytes[neg] <- fourBytes[neg] + 256L;
 
     base <- 256^(0:3);
-    MOPT <- c(NA,NA,NA,NA);
+    MOPT <- integer(4L);
     for (endian in c("little", "big")) {
       mopt <- sum(base*fourBytes);
       for (kk in 4:1) {
@@ -614,15 +886,16 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         mopt <- mopt %/% 10;
       }
 
-      isMOPT <- (MOPT[1] %in% 0:4 && MOPT[2] == 0 && MOPT[3] %in% 0:5 && MOPT[4] %in% 0:2);
+      isMOPT <- (MOPT[1L] %in% 0:4 && MOPT[2L] == 0L && MOPT[3L] %in% 0:5 && MOPT[4L] %in% 0:2);
       if (isMOPT)
         break;
 
       base <- rev(base);
     } # for (endian ...)
 
-    if (!isMOPT)
-        stop("File format error: Not a valid MAT v4. The first four bytes (MOPT) were: ", paste(MOPT, collapse=", "));
+    if (!isMOPT) {
+      stop("File format error: Not a valid MAT v4. The first four bytes (MOPT) were: ", paste(MOPT, collapse=", "));
+    }
 
     verbose && cat(verbose, level=-50, "Read MOPT bytes: ", moptToString(MOPT));
 
@@ -651,11 +924,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # The 'type' field, a.k.a. MOPT
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if (is.null(firstFourBytes)) {
-        firstFourBytes <- readBinMat(con, what=integer(), size=1, n=4);
+        firstFourBytes <- readBinMat(con, what=integer(), size=1L, n=4L);
       }
 
       # If no bytes are read, we have reached the End Of Stream.
-      if (length(firstFourBytes) == 0)
+      if (length(firstFourBytes) == 0L)
         return(NULL);
 
       # Assert that it really is a MAT v4 file we are reading and get MOPT bytes
@@ -671,11 +944,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #          3 VAX G-float  [don't know how to read these]
       #          4 Cray         [don't know how to read these]"
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if (MOPT[1] == 0) {
+      MOPT1 <- MOPT[1L];
+      if (MOPT1 == 0L) {
         detectedEndian <<- "little";
-      } else if (MOPT[1] == 1) {
+      } else if (MOPT1 == 1L) {
         detectedEndian <<- "big";
-      } else if (MOPT[1] %in% 2:4) {
+      } else if (MOPT1 %in% 2:4) {
         stop("Looks like a MAT v4 file, but the storage format of numerics (VAX D-float, VAX G-float or Cray) is not supported. Currently only IEEE numeric formats in big or little endian are supported.");
       } else {
         stop("Unknown first byte in MOPT header (not in [0,4]): ", paste(MOPT, collapse=", "));
@@ -689,7 +963,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # for "order" code...whether a matrix is written in row-major or
       # column-major format.  Its value here will be ignored. /Andy November 2003
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      header$ocode <- MOPT[2];
+      header$ocode <- MOPT[2L];
 
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # MOPT[3] "indicates which format the data is stored in according to the
@@ -710,35 +984,36 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # precision defines the number of type of data written and thus the number of
       # bytes per datum.
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if (MOPT[3] == 0) {
+      MOPT3 <- MOPT[3L];
+      if (MOPT3 == 0L) {
         # "64-bit double";
         header$what <- double();
-        header$size <- 8;
+        header$size <- 8L;
         header$signed <- NA;
-      } else if (MOPT[3] == 1) {
+      } else if (MOPT3 == 1L) {
         # "32-bit single";
         header$what <- double();
-        header$size <- 4;
+        header$size <- 4L;
         header$signed <- NA;
-      } else if (MOPT[3] == 2) {
+      } else if (MOPT3 == 2L) {
         # "32-bit signed integer";
         header$what <- integer();
-        header$size <- 4;
+        header$size <- 4L;
         header$signed <- TRUE;  # Ignored by readBin() because 32-bit ints are always signed!
-      } else if (MOPT[3] == 3) {
+      } else if (MOPT3 == 3L) {
         # "16-bit signed integer";
         header$what <- integer();
-        header$size <- 2;
+        header$size <- 2L;
         header$signed <- TRUE;
-      } else if (MOPT[3] == 4) {
+      } else if (MOPT3 == 4L) {
         # "16-bit unsigned integer";
         header$what <- integer();
-        header$size <- 2;
+        header$size <- 2L;
         header$signed <- FALSE;
-      } else if (MOPT[3] == 5) {
+      } else if (MOPT3 == 5L) {
         # "8-bit unsigned integer";
         header$what <- integer();
-        header$size <- 1;
+        header$size <- 1L;
         header$signed <- FALSE;
       } else {
         stop("Unknown third byte in MOPT header (not in [0,5]): ", paste(MOPT, collapse=", "));
@@ -753,25 +1028,26 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #          point numbers between 0 and 255 representing ASCII-encoded
       #          characters."
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      MOPT4 <- MOPT[4L];
       header$matrixType <- "numeric";
-      if (MOPT[4] == 0) {
+      if (MOPT4 == 0L) {
         header$matrixType <- "numeric";
-      } else if (MOPT[4] == 1) {
+      } else if (MOPT4 == 1L) {
         header$matrixType <- "text";
-      } else if (MOPT[4] == 2) {
+      } else if (MOPT4 == 2L) {
         header$matrixType <- "sparse";
       } else {
-#        stop("Unknown fourth byte in MOPT header (not in [0,2]): ", paste(MOPT, collapse=", "));
+###        stop("Unknown fourth byte in MOPT header (not in [0,2]): ", paste(MOPT, collapse=", "));
       }
 
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # The 'mrows' and 'ncols' fields
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # "The row dimension contains an integer with the number of rows in the matrix."
-      header$mrows  <- readBinMat(con, what=integer(), size=4, n=1)
+      header$mrows  <- readBinMat(con, what=integer(), size=4L, n=1L)
 
       # "The column dimension contains an integer with the number of columns in the matrix."
-      header$ncols  <- readBinMat(con, what=integer(), size=4, n=1)
+      header$ncols  <- readBinMat(con, what=integer(), size=4L, n=1L)
 
       verbose && cat(verbose, level=-50, "Matrix dimension: ", header$mrows, "x", header$ncols);
 
@@ -780,7 +1056,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # "The imaginary flag is an integer whose value is either 0 or 1. If 1,
       #  then the matrix has an imaginary part. If 0, there is only real data."
-      header$imagf  <- readBinMat(con, what=integer(), size=4, n=1)
+      header$imagf  <- readBinMat(con, what=integer(), size=4L, n=1L)
 
       verbose && cat(verbose, level=-60, "Matrix contains imaginary values: ", as.logical(header$imagf));
 
@@ -788,7 +1064,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # The 'namelen' fields
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # "The name length contains an integer with 1 plus the length of the matrix name."
-      header$namlen <- readBinMat(con, what=integer(), size=4, n=1)
+      header$namlen <- readBinMat(con, what=integer(), size=4L, n=1L)
 
       verbose && cat(verbose, level=-100, "Matrix name length: ", header$namlen-1);
 
@@ -826,31 +1102,29 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       n <- header$mrows * header$ncols;
       if (header$matrixType == "text") {
-##        data <- readCharMat(con, nchars=n);
-##      data <- strsplit(data, split="");
         data <- readBinMat(con, what=header$what, size=header$size,
                                                      signed=header$signed, n=n);
         data <- intToChar(data);
 
         # Make into a matrix
         dim(data) <- c(header$mrows, header$ncols);
-        data <- apply(data, MARGIN=1, FUN=paste, sep="", collapse="");
+        data <- apply(data, MARGIN=1L, FUN=paste, sep="", collapse="");
       } else if (header$matrixType %in% c("numeric", "sparse")) {
         real <- readBinMat(con, what=header$what, size=header$size, signed=header$signed, n=n);
-        if (header$imagf != 0) {
+        if (header$imagf != 0L) {
           verbose && cat(verbose, level=-2, "Reading imaginary part of complex data set.")
           imag <- readBinMat(con, what=header$what, size=header$size, signed=header$signed, n=n);
           data <- complex(real=real, imaginary=imag);
         } else {
           data <- real;
-          rm(real);
+          real <- NULL; # Not needed anymore
         }
 
         # Make into a matrix or an array
         dim(data) <- c(header$mrows, header$ncols);
 
         if (header$matrixType == "sparse") {
-          # From help sparse in Matlab:
+          # From help sparse in MATLAB:
           # "S = SPARSE(i,j,s,m,n,nzmax) uses the rows of [i,j,s] to generate an
           #  m-by-n sparse matrix with space allocated for nzmax nonzeros.  The
           #  two integer index vectors, i and j, and the real or complex entries
@@ -861,65 +1135,63 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           # The last entry in 'data' is (only) used to specify the size of the
           # matrix, i.e. to infer (m,n).
 
-          i <- as.integer(data[,1]);
-          j <- as.integer(data[,2]);
-          s <- data[,3];
-          rm(data);
+          i <- as.integer(data[,1L]);
+          j <- as.integer(data[,2L]);
+          s <- data[,3L];
+          data <- NULL; # Not needed anymore
 
-          verbose && str(verbose, level=-102, header);
-          verbose && str(verbose, level=-102, i);
-          verbose && str(verbose, level=-102, j);
-          verbose && str(verbose, level=-102, s);
+          if (verbose) {
+            str(verbose, level=-102, header);
+            str(verbose, level=-102, i);
+            str(verbose, level=-102, j);
+            str(verbose, level=-102, s);
+          }
 
-          # When saving a sparse matrix, Matlab is making sure that one can infer
+          # When saving a sparse matrix, MATLAB is making sure that one can infer
           # the size of the m-by-n sparse matrix for the index matrix [i,j]. If
-          # there are no non-zero elements in the last row or last column, Matlab
+          # there are no non-zero elements in the last row or last column, MATLAB
           # saves a zero elements in such case.
           n <- max(i);
           m <- max(j);
 
-          # Note that it can be the case that Matlab save the above extra element
+          # Note that it can be the case that MATLAB save the above extra element
           # just in case, meaning it might actually contain an repeated element.
           # If so, remove it. /HB 2008-02-12
           last <- length(i);
-          if (last > 1 && i[last] == i[last-1] && j[last] == j[last-1]) {
+          if (last > 1L && i[last] == i[last-1L] && j[last] == j[last-1L]) {
             i <- i[-last];
             j <- j[-last];
             s <- s[-last];
           }
 
           if (sparseMatrixClass == "Matrix" && require("Matrix", quietly=TRUE)) {
-            i <- i-as.integer(1);
-            j <- j-as.integer(1);
+            i <- i-1L;
+            j <- j-1L;
             dim <- as.integer(c(n, m));
             data <- new("dgTMatrix", i=i, j=j, x=s, Dim=dim);
             data <- as(data, "dgCMatrix");
           } else if (sparseMatrixClass == "SparseM" && require("SparseM", quietly=TRUE)) {
             dim <- as.integer(c(n, m));
             data <- new("matrix.coo", ra=s, ia=i, ja=j, dimension=dim);
-#            data <- as(data, "matrix.csc");
           } else {
             # Instead of applying row-by-row, we calculate the position of each
             # sparse element in an hardcoded fashion.
-            pos <- (j-1)*n + i;
-            rm(i,j);  # Not needed anymore
-
-# Instead, see 'last' above.
-#            pos <- pos[-length(pos)];
-#            s <- s[-length(s)];
+            pos <- (j-1L)*n + i;
+            i <- j <- NULL; # Not needed anymore
 
             data <- matrix(0, nrow=n, ncol=m);
             data[pos] <- s;
-
-            rm(pos, s); # Not needed anymore
+            pos <- s <- NULL; # Not needed anymore
           }
         }
       } else {
         stop("MAT v4 file format error: Unknown 'type' in header: ", header$matrixType);
       }
 
-      verbose && cat(verbose, level=-60, "Matrix elements:\n");
-      verbose && str(verbose, level=-60, data);
+      if (verbose) {
+        cat(verbose, level=-60, "Matrix elements:\n");
+        str(verbose, level=-60, data);
+      }
 
       data <- list(data);
       names(data) <- name;
@@ -945,7 +1217,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       verbose && str(verbose, level=-102, data);
 
       result <- append(result, data);
-      rm(data);
+      data <- NULL; # Not needed anymore
 
       firstFourBytes <- NULL;
     } # repeat
@@ -954,113 +1226,17 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
     attr(result, "header") <- header;
     result;
   } # readMat4()
-
-
-  # Debug function to generate more informative error messages.
-  moptToString <- function(MOPT) {
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # MOPT[1] "indicates the numeric format of binary numbers on the machine
-    #          that wrote the file.
-    #          0 IEEE Little Endian (PC, 386, 486, DEC Risc)
-    #          1 IEEE Big Endian (Macintosh, SPARC, Apollo,SGI, HP 9000/300,
-    #            other Motorola)
-    #          2 VAX D-float  [don't know how to read these]
-    #          3 VAX G-float  [don't know how to read these]
-    #          4 Cray         [don't know how to read these]"
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    if (MOPT[1] == 0)
-      mStr <- "IEEE Little Endian (PC, 386, 486, DEC Risc)"
-    else if (MOPT[1] == 1)
-      mStr <- "IEEE Big Endian (Macintosh, SPARC, Apollo,SGI, HP 9000/300, other Motorola)"
-    else if (MOPT[1] == 2)
-      mStr <- "VAX D-float"
-    else if (MOPT[1] == 3)
-      mStr <- "VAX G-float"
-    else if (MOPT[1] == 4)
-      mStr <- "Cray"
-    else
-      mStr <- sprintf("<Unknown value of MOPT[1]. Not in range [0,4]: %d.>", as.integer(MOPT[1]));
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # MOPT[2] "is always 0 (zero) and is reserved for future use."
-    #
-    # I've only seen a non-default value for ocode used once, by a
-    # matfile library external to the MathWorks.  I believe it stands
-    # for "order" code...whether a matrix is written in row-major or
-    # column-major format.  Its value here will be ignored. /Andy November 2003
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    if (MOPT[2] == 0)
-      oStr <- "Reserved for future use"
-    else
-      oStr <- sprintf("<Unknown value of MOPT[2]. Should be 0: %d.>", as.integer(MOPT[2]));
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # MOPT[3] "indicates which format the data is stored in according to the
-    #          following table:
-    #          0 double-precision (64-bit) floating point numbers
-    #          1 single-precision (32-bit) floating point numbers
-    #          2 32-bit signed integers
-    #          3 16-bit signed integers
-    #          4 16-bit unsigned integers
-    #          5 8-bit unsigned integers
-    #          The precision used by the save command depends on the size and
-    #          type of each matrix. Matrices with any noninteger entries and
-    #          matrices with 10,000 or fewer elements are saved in floating
-    #          point formats requiring 8 bytes per real element. Matrices
-    #          with all integer entries and more than 10,000 elements are
-    #          saved in the following formats, requiring fewer bytes per element."
-    #
-    # precision defines the number of type of data written and thus the number of
-    # bytes per datum.
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    if (MOPT[3] == 0)
-      pStr <- "64-bit double"
-    else if (MOPT[3] == 1)
-      pStr <- "32-bit single"
-    else if (MOPT[3] == 2)
-      pStr <- "32-bit signed integer"
-    else if (MOPT[3] == 3)
-      pStr <- "16-bit signed integer"
-    else if (MOPT[3] == 4)
-      pStr <- "16-bit unsigned integer"
-    else if (MOPT[3] == 5)
-      pStr <- "8-bit unsigned integer"
-    else
-      pStr <- sprintf("<Unknown value of MOPT[3]. Not in range [0,5]: %d.>", as.integer(MOPT[3]));
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # MOPT[4]  "indicates the matrix type according to the following table:
-    #          0 Numeric (Full) matrix
-    #          1 Text matrix
-    #          2 Sparse matrix
-    #          Note that the elements of a text matrix are stored as floating
-    #          point numbers between 0 and 255 representing ASCII-encoded
-    #          characters."
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    if (MOPT[4] == 0)
-      tStr <- "Numeric (Full) matrix"
-    else if (MOPT[4] == 1)
-      tStr <- "Text matrix"
-    else if (MOPT[4] == 2)
-      tStr <- "Sparse matrix"
-    else
-      tStr <- sprintf("<Unknown value of MOPT[4]. Not in range [0,2]: %d.>", as.integer(MOPT[4]));
-
-
-    moptStr <- paste("MOPT[1]: ", mStr, ". MOPT[2]: ", oStr, ". MOPT[3]: ", pStr, ". MOPT[4]: ", tStr, ".", sep="");
-    moptStr;
-  } # moptToString()
-
   #===========================================================================
   # MAT v4 specific                                                        END
   #===========================================================================
+
 
   #===========================================================================
   # MAT v5 specific                                                      BEGIN
   #===========================================================================
   readMat5 <- function(con, maxLength=NULL, firstFourBytes=NULL) {
-    # Used to test if there a matrix read contains an imaginary part too.
-    left <- NA;
+    # Used to test if a matrix read contains an imaginary part too.
+    left <- NA_integer_;
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Function to read the MAT-file header, which contains information of what
@@ -1074,11 +1250,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #  contain a zero, MATLAB will assume the file is a Version 4 MAT-file."
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if (is.null(firstFourBytes))
-        firstFourBytes <- readBinMat(con, what=integer(), size=1, n=4);
+        firstFourBytes <- readBinMat(con, what=integer(), size=1L, n=4L);
 
       MOPT <- firstFourBytes;
 
-      if (MOPT[1] %in% 0:4 && MOPT[2] == 0 && MOPT[3] %in% 0:5 && MOPT[4] %in% 0:2) {
+      if (MOPT[1L] %in% 0:4 && MOPT[2L] == 0L && MOPT[3L] %in% 0:5 && MOPT[4L] %in% 0:2) {
         stop("Detected MAT file format v4. Do not use readMat5() explicitly, but use readMat().");
       }
 
@@ -1086,26 +1262,25 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #  Text [124 bytes] (we already have read four of them)
       # - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       # Paste the 'MOPT' above to the rest.
-      description <- c(MOPT, readBinMat(con, what=integer(), size=1, n=120));
+      description <- c(MOPT, readBinMat(con, what=integer(), size=1L, n=120L));
       description <- paste(intToChar(description), collapse="");
-#      cat("Description: '", description, "'\n", sep="");
 
       # - - - - - - - - - -
       #  Version
       # - - - - - - - - - -
       # At this point we can not know which the endian is and we just have to
       # make a guess and adjust later.
-      version <- readBinMat(con, what=integer(), size=2, n=1, endian="little");
+      version <- readBinMat(con, what=integer(), size=2L, n=1L, endian="little");
 
       # - - - - - - - - - -
       #  Endian Indicator
       # - - - - - - - - - -
-      endian <- readCharMat(con, nchars=2);
-      if (endian == "MI")
-        detectedEndian <<- "big"
-      else if (endian == "IM")
-        detectedEndian <<- "little"
-      else {
+      endian <- readCharMat(con, nchars=2L);
+      if (endian == "MI") {
+        detectedEndian <<- "big";
+      } else if (endian == "IM") {
+        detectedEndian <<- "little";
+      } else {
         warning("Unknown endian: ", endian, ". Will assume Bigendian.");
         detectedEndian <<- "big";
       }
@@ -1126,25 +1301,93 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       list(description=description, version=version, endian=detectedEndian);
     } # readMat5Header()
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # MAT5 CONSTANTS
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Data sizes and types according to [3]
+    KNOWN_TYPES <- c(
+      "miMATRIX"=0L,
+      "miINT8"=8L, 	     #  1 miINT8 8 bit, signed
+      "miUINT8"=8L, 	     #  2 miUINT8 8 bit, unsigned
+      "miINT16"=16L,      #  3 miINT16 16-bit, signed
+      "miUINT16"=16L,     #  4 miUINT16 16-bit, unsigned
+      "miINT32"=32L,      #  5 miINT32 32-bit, signed
+      "miUINT32"=32L,     #  6 miUINT32 32-bit, unsigned
+      "miSINGLE"=32L,     #  7 miSINGLE IEEE 754 single format
+      "--"=NA_integer_,			     #  8 -- Reserved
+      "miDOUBLE"=64L,     #  9 miDOUBLE IEEE 754 double format
+      "--"=NA_integer_,			     # 10 -- Reserved
+      "--"=NA_integer_,			     # 11 -- Reserved
+      "miINT64"=64L,	     # 12 miINT64 64-bit, signed
+      "miUINT64"=64L,     # 13 miUINT64 64-bit, unsigned
+      "miMATRIX"=NA_integer_,     # 14 miMATRIX MATLAB array
+      "miCOMPRESSED"=NA_integer_, # 15 miCOMPRESSED Compressed Data
+      "miUTF8"=8L,        # 16 miUTF8 Unicode UTF-8 Encoded Character Data
+      "miUTF16"=16L,      # 17 miUTF16 Unicode UTF-16 Encoded Character Data
+      "miUTF32"=32L       # 18 miUTF32 Unicode UTF-32 Encoded Character Data
+    );
+    NAMES_OF_KNOWN_TYPES <- names(KNOWN_TYPES);
+    NBR_OF_KNOWN_TYPES <- length(KNOWN_TYPES);
+
+    SIGNED_KNOWN_TYPES <- rep(NA, times=NBR_OF_KNOWN_TYPES);
+    names(SIGNED_KNOWN_TYPES) <- NAMES_OF_KNOWN_TYPES;
+    SIGNED_KNOWN_TYPES[grep("miINT", NAMES_OF_KNOWN_TYPES)] <- TRUE;
+    SIGNED_KNOWN_TYPES[grep("miUINT", NAMES_OF_KNOWN_TYPES)] <- FALSE;
+
+    KNOWN_WHATS <- list(
+      "miMATRIX"=double(),
+      "miINT8"=integer(),
+      "miUINT8"=integer(),
+      "miINT16"=integer(),
+      "miUINT16"=integer(),
+      "miINT32"=integer(),
+      "miUINT32"=integer(),
+      "miSINGLE"=double(),
+      "--"=NA,
+      "miDOUBLE"=double(),
+      "--"=NA,
+      "--"=NA,
+      "miINT64"=integer(),
+      "miUINT64"=integer(),
+      "miMATRIX"=NA,
+      "miCOMPRESSED"=NA,
+      "miUTF8"=integer(),
+      "miUTF16"=integer(),
+      "miUTF32"=integer()
+    );
+    stopifnot(length(KNOWN_WHATS) == NBR_OF_KNOWN_TYPES);
+
+    # Known types and the number of bytes they occupy.
+    # NOTE: The index corresponds to its encoded value.
+    KNOWN_ARRAY_FLAGS <- c(
+      "mxCELL_CLASS"=NA_integer_,
+      "mxSTRUCT_CLASS"=NA_integer_,
+      "mxOBJECT_CLASS"=NA_integer_,
+      "mxCHAR_CLASS"=8L,
+      "mxSPARSE_CLASS"=NA_integer_,
+      "mxDOUBLE_CLASS"=NA_integer_,
+      "mxSINGLE_CLASS"=NA_integer_,
+      "mxINT8_CLASS"=8L,
+      "mxUINT8_CLASS"=8L,
+      "mxINT16_CLASS"=16L,
+      "mxUINT16_CLASS"=16,
+      "mxINT32_CLASS"=32L,
+      "mxUINT32_CLASS"=32L,
+      "mxINT64_CLASS"=64L,
+      "mxUINT64_CLASS"=64L
+    );
+    NAMES_OF_KNOWN_ARRAY_FLAGS <- names(KNOWN_ARRAY_FLAGS);
+    NBR_OF_KNOWN_ARRAY_FLAGS <- length(KNOWN_ARRAY_FLAGS);
+    SIGNED_KNOWN_ARRAY_FLAGS <- rep(NA, times=NBR_OF_KNOWN_ARRAY_FLAGS);
+    names(SIGNED_KNOWN_ARRAY_FLAGS) <- NAMES_OF_KNOWN_ARRAY_FLAGS;
+    SIGNED_KNOWN_ARRAY_FLAGS[grep("mxINT", NAMES_OF_KNOWN_ARRAY_FLAGS)] <- TRUE;
+    SIGNED_KNOWN_ARRAY_FLAGS[grep("mxUINT", NAMES_OF_KNOWN_ARRAY_FLAGS)] <- FALSE;
+
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # Function to read a MAT v5 Data Element
+    # Utility functions for readMat5DataElement()
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    readMat5DataElement <- function(this) {
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      isSigned <- function(type) {
-        signed   <- c("mxINT8_CLASS", "mxINT16_CLASS", "mxINT32_CLASS", "mxINT64_CLASS");
-        signed   <- c(signed, "miINT8", "miINT16", "miINT32", "miINT64");
-        unsigned <- c("mxUINT8_CLASS", "mxUINT16_CLASS", "mxUINT32_CLASS", "mxUINT64_CLASS");
-        unsigned <- c(unsigned, "miUINT8", "miUINT16", "miUINT32", "miUINT64");
-        if (!is.element(type, c(signed, unsigned)))
-          return(NA);
-        is.element(type, signed);
-      } # isSigned()
-
-
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      #
       # "Each data element begins with an 8-byte tag followed immediately
       #  by the data in the element."
       #
@@ -1164,60 +1407,19 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #   +---------------------------------------+
       #   :                                       :
       #
-      readTag <- function(this) {
-        verbose && enter(verbose, level=-80, "Reading Tag");
-        on.exit(verbose && exit(verbose));
+      mat5ReadTag <- function(this) {
+        if (verbose) {
+          enter(verbose, level=-80, "Reading Tag");
+          on.exit(exit(verbose));
+        }
 
-        type <- readBinMat(con, what=integer(), size=4, n=1);
+        type <- readBinMat(con, what=integer(), size=4L, n=1L);
+
         # Did we read EOF?
-        if (length(type) == 0)
+        if (length(type) == 0L)
           return(NULL);
 
-        left <<- left - 4;
-
-        # Data sizes and types according to [3]
-        knownTypes <- c(
-          "miMATRIX"=0,
-          "miINT8"=8, 	     #  1 miINT8 8 bit, signed
-          "miUINT8"=8, 	     #  2 miUINT8 8 bit, unsigned
-          "miINT16"=16,      #  3 miINT16 16-bit, signed
-          "miUINT16"=16,     #  4 miUINT16 16-bit, unsigned
-          "miINT32"=32,      #  5 miINT32 32-bit, signed
-          "miUINT32"=32,     #  6 miUINT32 32-bit, unsigned
-          "miSINGLE"=32,     #  7 miSINGLE IEEE 754 single format
-          "--"=NA,			     #  8 -- Reserved
-          "miDOUBLE"=64,     #  9 miDOUBLE IEEE 754 double format
-          "--"=NA,			     # 10 -- Reserved
-          "--"=NA,			     # 11 -- Reserved
-          "miINT64"=64,	     # 12 miINT64 64-bit, signed
-          "miUINT64"=64,     # 13 miUINT64 64-bit, unsigned
-          "miMATRIX"=NA,     # 14 miMATRIX MATLAB array
-          "miCOMPRESSED"=NA, # 15 miCOMPRESSED Compressed Data
-          "miUTF8"=8,        # 16 miUTF8 Unicode UTF-8 Encoded Character Data
-          "miUTF16"=16,      # 17 miUTF16 Unicode UTF-16 Encoded Character Data
-          "miUTF32"=32       # 18 miUTF32 Unicode UTF-32 Encoded Character Data
-        );
-
-        knownWhats <- list(
-          "miMATRIX"=0,
-          "miINT8"=integer(),
-          "miUINT8"=integer(),
-          "miINT16"=integer(),
-          "miUINT16"=integer(),
-          "miINT32"=integer(),
-          "miUINT32"=integer(),
-          "miSINGLE"=double(),
-          "--"=NA,
-          "miDOUBLE"=double(),
-          "--"=NA,
-          "--"=NA,
-          "miINT64"=integer(),
-          "miUINT64"=integer(),
-          "miMATRIX"=NA,
-          "miUTF8"=integer(),
-          "miUTF16"=integer(),
-          "miUTF32"=integer()
-        );
+        left <<- left - 4L;
 
         nbrOfBytes <- NULL;
 
@@ -1227,58 +1429,53 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         #  of the first two bytes of the tag with the value zero (0). If
         #  these two bytes are not zero, the tag uses the compressed format."
         tmp <- type;
-        bytes <- rep(NA, length=4);
+        bytes <- rep(NA_integer_, length=4L);
         for (kk in 1:4) {
           bytes[kk] <- (tmp %% 256);
           tmp <- tmp %/% 256;
         }
-        rm(tmp);
-        compressed <- any(bytes[3:4] != 0);
+        compressed <- any(bytes[3:4] != 0L);
 
         verbose && cat(verbose, level=-100, "Compressed tag: ", compressed);
 
-#          if (type+1 < 1 || type+1 > length(knownTypes)) {
         if (compressed) {
- #           stop()
           # NOTE: Do not swap for different endians here. /HB 020827
-          nbrOfBytes <- type %/% 2^16;
-          type <- type %% 2^16;
+          nbrOfBytes <- type %/% 65536;
+          type <- type %% 65536;
           if (detectedEndian == "big") {
             tmp <- type;
-#            type <- nbrOfBytes;
-#            nbrOfBytes <- tmp;
           }
-          if (type+1 < 1 || type+1 > length(knownTypes))
-            stop("Unknown data type. Not in range [1,", length(knownTypes), "]: ", type);
+          if (type+1L < 1L || type+1L > NBR_OF_KNOWN_TYPES)
+            stop("Unknown data type. Not in range [1,", NBR_OF_KNOWN_TYPES, "]: ", type);
 
           # Treat unsigned values too.
-          padding <- 4 - ((nbrOfBytes-1) %% 4 + 1);
+          padding <- 4L - ((nbrOfBytes-1L) %% 4L + 1L);
         } else {
-#    print(c(size=size, n=n, signed=signed, endian=endian, bfr=bfr));
-          nbrOfBytes <- readBinMat(con, what=integer(), size=4, n=1);
-          left <<- left - 4;
-          padding <- 8 - ((nbrOfBytes-1) %% 8 + 1);
+          nbrOfBytes <- readBinMat(con, what=integer(), size=4L, n=1L);
+          left <<- left - 4L;
+          padding <- 8L - ((nbrOfBytes-1L) %% 8L + 1L);
         }
 
-        type <- names(knownTypes)[type+1];
-        sizeOf <- as.integer(knownTypes[type]);
-        what <- knownWhats[[type]];
-#        cat("type=", type, ", sizeOf=", sizeOf, ", what=", typeof(what), "\n", sep="");
-
-        signed <- isSigned(type);
+        type <- type+1L;
+        sizeOf <- KNOWN_TYPES[type];
+        what <- KNOWN_WHATS[[type]];
+        signed <- SIGNED_KNOWN_TYPES[type];
+        type <- NAMES_OF_KNOWN_TYPES[type];
+#       str(list(type=type, sizeOf=sizeOf, what=what, signed=signed));
 
         tag <- list(type=type, signed=signed, sizeOf=sizeOf, what=what, nbrOfBytes=nbrOfBytes, padding=padding, compressed=compressed);
 
         verbose && print(verbose, level=-100, unlist(tag));
 
-        if (identical(tag$type, "miCOMPRESSED")) {
+        if (tag$type == "miCOMPRESSED") {
           n <- tag$nbrOfBytes;
           zraw <- readBinMat(con=con, what=raw(), n=n);
-          verbose && cat(verbose, level=-110, "Decompressing ", n, " bytes");
-          verbose && printf(verbose, level=-110, "zraw [%d bytes]: %s\n", length(zraw), hpaste(zraw, maxHead=8, maxTail=8));
+          if (verbose) {
+            cat(verbose, level=-110, "Decompressing ", n, " bytes");
+            printf(verbose, level=-110, "zraw [%d bytes]: %s\n", length(zraw), hpaste(zraw, maxHead=8, maxTail=8));
+          }
           # Sanity check
           stopifnot(identical(length(zraw), n));
-## zraw0 <<- zraw;
           tryCatch({
             unzraw <- uncompress(zraw, asText=FALSE);
 
@@ -1287,424 +1484,540 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
                     length(unzraw)/length(zraw), length(zraw), length(unzraw));
 
             pushBackRawMat(con, unzraw);
-            rm(unzraw);
+            unzraw <- NULL; # Not needed anymore
           }, error = function(ex) {
             msg <- ex$message;
             env <- globalenv(); # To please 'R CMD check'
             assign("R.matlab.debug.zraw", zraw, envir=env);
-            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (using '%s'). Please report to the R.matlab package maintainer (%s). The reason was: %s", attr(uncompress, "label"), getMaintainer(R.matlab), msg);
-            onError <- getOption("R.matlab::readMat/onDecompressError");
+            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (using '%s'). Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
+            onError <- getOption("R.matlab::readMat/onDecompressError", "error");
             if (identical(onError, "warning")) {
-              verbose && enter(verbose, "Skipping");
-              verbose && cat(verbose, msg);
               warning(msg);
-              verbose && exit(verbose);
+              if (verbose) {
+                enter(verbose, "Skipping");
+                cat(verbose, msg);
+                exit(verbose);
+              }
             } else {
               throw(msg);
             }
           });
-          rm(zraw);
+          zraw <- NULL; # Not needed anymore
 
-          tag <- readTag(this);
-        } # if (identical(tag$type, "miCOMPRESSED"))
+          tag <- mat5ReadTag(this);
+        } # if (tag$type == "miCOMPRESSED")
 
         tag;
-      } # readTag()
+      } # mat5ReadTag()
 
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+    # Subelement     Data Type  Number of Bytes
+    # ---------------------------------------------------------------------
+    # Array Flags    miUINT32   2*sizeOf(miUINT32) (8 bytes)
+    mat5ReadArrayFlags <- function(this) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Array Flags");
+        on.exit(exit(verbose));
+      }
+
+      # Read the first miUINT32 integer
+      arrayFlags <- readBinMat(con, what=integer(), size=4L, n=1L);
+      left <<- left - 4L;
+
+      # Byte 4 - Class
+      # "Class. This field contains a value that identifies the MATLAB
+      # array type (class) represented by the data element."
       #
-      # Subelement     Data Type  Number of Bytes
-      # ---------------------------------------------------------------------
-      # Array Flags    miUINT32   2*sizeOf(miUINT32) (8 bytes)
+      class <- arrayFlags %% 256;
+      if (class < 1L || class > NBR_OF_KNOWN_ARRAY_FLAGS) {
+        stop("Unknown array type (class). Not in [1,", NBR_OF_KNOWN_ARRAY_FLAGS, "]: ", class);
+      }
+      classSize <- KNOWN_ARRAY_FLAGS[class];
+      class <- NAMES_OF_KNOWN_ARRAY_FLAGS[class];
 
-      readArrayFlags <- function(this) {
-        verbose && enter(verbose, level=-70, "Reading Array Flags");
-        on.exit(verbose && exit(verbose));
+      arrayFlags <- arrayFlags %/% 256;
 
-        getBits <- function(i) {
-          ready <- FALSE;
-          bits <- c();
-          while (!ready) {
-            bit <- i %% 2;
-            bits <- c(bits, bit);
-            i <- i %/% 2;
-            ready <- (i==0);
-          }
-          bits;
-        } # getBits()
+      # Byte 3 - Flags
+      # "Flags. This field contains three, single-bit flags that indicate
+      #  whether the numeric data is complex, global, or logical. If the
+      #  complex bit is set, the data element includes an imaginary part
+      #  (pi). If the global bit is set, MATLAB loads the data element as
+      #  a global variable in the base workspace. If the logical bit is
+      #  set, it indicates the array is used for logical indexing."
+      flags <- arrayFlags %% 256;
 
-        # Known types and the number of bytes they occupy.
-        # NOTE: The index corresponds to its encoded value.
-        knownTypes <- c("mxCELL_CLASS"=NA, "mxSTRUCT_CLASS"=NA, "mxOBJECT_CLASS"=NA, "mxCHAR_CLASS"=8, "mxSPARSE_CLASS"=NA, "mxDOUBLE_CLASS"=NA, "mxSINGLE_CLASS"=NA, "mxINT8_CLASS"=8, "mxUINT8_CLASS"=8, "mxINT16_CLASS"=16, "mxUINT16_CLASS"=16, "mxINT32_CLASS"=32, "mxUINT32_CLASS"=32, "mxINT64_CLASS"=64, "mxUINT64_CLASS"=64);
+      # Was:
+      ## bits <- as.logical(getBits(flags + 256L, nbits=9L)[-9L]);
+      ## logical <- bits[2L];
+      ## global  <- bits[3L];
+      ## complex <- bits[4L];
 
-        # Read the first miUINT32 integer
-        arrayFlags <- readBinMat(con, what=integer(), size=4, n=1);
-        left <<- left - 4;
+      f1 <- flags %% 2;
+      f2 <- (flags - f1) %% 4;
+      f3 <- (flags - f1 - f2) %% 8;
+      f4 <- (flags - f1 - f2 - f3) %% 16;
+      logical <- as.logical(f2);
+      global  <- as.logical(f3);
+      complex <- as.logical(f4);
 
-        # Byte 4 - Class
-        # "Class. This field contains a value that identifies the MATLAB
-        # array type (class) represented by the data element."
-        #
-        class <- arrayFlags %% 256;
-        if (class < 1 || class > length(knownTypes)) {
-          stop("Unknown array type (class). Not in [1,", length(knownTypes), "]: ", class);
+
+      # Bytes 1 & 2 - The two hi-bytes are "undefined".
+
+
+      # Used for Sparse Arrays, otherwise undefined
+      # Read the second miUINT32 integer
+      nzmax <- readBinMat(con, what=integer(), size=4L, n=1L);
+      left <<- left - 4L;
+
+      flags <- list(logical=logical, global=global, complex=complex, class=class, classSize=classSize, nzmax=nzmax);
+
+      if (verbose) {
+        cat(verbose, level=-100, "Flags:");
+        print(verbose, level=-100, unlist(flags[-1L]));
+      }
+
+      flags;
+    } # mat5ReadArrayFlags()
+
+
+    mat5ReadDimensionsArray <- function(this) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Dimensions Array");
+        on.exit(exit(verbose));
+      }
+
+      tag <- mat5ReadTag(this);
+      if (tag$type != "miINT32") {
+        if (verbose) {
+          cat(verbose, "Tag:");
+          str(verbose, tag);
         }
-        class <- names(knownTypes)[class];
-        classSize <- knownTypes[class];
+        throw("Tag type not supported: ", tag$type);
+      }
 
-        arrayFlags <- arrayFlags %/% 256;
+      sizeOf <- tag$sizeOf %/% 8;
+      len <- tag$nbrOfBytes %/% sizeOf;
+      verbose && cat(verbose, level=-100, "Reading ", len, " integers each of size ", sizeOf, " bytes.");
+      dim <- readBinMat(con, what=integer(), size=sizeOf, n=len);
+      left <<- left - sizeOf*len;
 
-        # Byte 3 - Flags
-        # "Flags. This field contains three, single-bit flags that indicate
-        #  whether the numeric data is complex, global, or logical. If the
-        #  complex bit is set, the data element includes an imaginary part
-        #  (pi). If the global bit is set, MATLAB loads the data element as
-        #  a global variable in the base workspace. If the logical bit is
-        #  set, it indicates the array is used for logical indexing."
-        flags <- arrayFlags %% 256;
-        flags <- as.logical(getBits(flags + 2^8)[-9]);
-        logical <- flags[2];
-        global  <- flags[3];
-        complex <- flags[4];
+      verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
+      padding <- readBinMat(con, what=integer(), size=1L, n=tag$padding);
+      left <<- left - tag$padding;
 
-        # Bytes 1 & 2 - The two hi-bytes are "undefined".
+      dimArray <- list(tag=tag, dim=dim);
 
+      verbose && print(verbose, level=-100, list(dim=dim));
 
-        # Used for Sparse Arrays, otherwise undefined
-        # Read the second miUINT32 integer
-        nzmax <- readBinMat(con, what=integer(), size=4, n=1);
-        left <<- left - 4;
-
-        flags <- list(logical=logical, global=global, complex=complex, class=class, classSize=classSize, nzmax=nzmax);
-
-        verbose && cat(verbose, level=-100, "Flags:");
-        verbose && print(verbose, level=-100, unlist(flags[-1]));
-
-        flags;
-      } # readArrayFlags()
+      dimArray;
+    } # mat5ReadDimensionsArray()
 
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readDimensionsArray <- function(this) {
-        verbose && enter(verbose, level=-70, "Reading Dimensions Array");
-        on.exit(verbose && exit(verbose));
+    mat5ReadName <- function(this) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Array Name");
+        on.exit(exit(verbose));
+      }
 
-        tag <- readTag(this);
-        if (tag$type != "miINT32") {
-          throw("Tag type not supported: ", tag$type);
-        }
+      tag <- mat5ReadTag(this);
 
-        sizeOf <- tag$sizeOf %/% 8;
-        len <- tag$nbrOfBytes %/% sizeOf;
-        verbose && cat(verbose, level=-100, "Reading ", len, " integers each of size ", sizeOf, " bytes.");
-        dim <- readBinMat(con, what=integer(), size=sizeOf, n=len);
-        left <<- left - sizeOf*len;
+      sizeOf <- tag$sizeOf %/% 8;
+      nchars <- tag$nbrOfBytes %/% sizeOf;
+      verbose && cat(verbose, level=-100, "Reading ", nchars, " characters.");
+      name <- readBinMat(con, what=tag$what, size=sizeOf, n=nchars);
+      ## Be generous in what types are accepted for names; MATLAB(tm) has
+      ## a habit of sprouting new file features.
+      name <- matToString(name, tag$type);
+      name <- asSafeRName(name);
+      left <<- left - nchars;
 
-        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
-        padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
-        left <<- left - tag$padding;
-
-        dimArray <- list(tag=tag, dim=dim);
-
-        verbose && print(verbose, level=-100, list(dim=dim));
-
-        dimArray;
-      } # readDimensionsArray()
-
-
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readName <- function(this) {
-        verbose && enter(verbose, level=-70, "Reading Array Name");
-        on.exit(verbose && exit(verbose));
-
-        tag <- readTag(this);
-
-        sizeOf <- tag$sizeOf %/% 8;
-        nchars <- tag$nbrOfBytes %/% sizeOf;
-        verbose && cat(verbose, level=-100, "Reading ", nchars, " characters.");
-        name <- readBinMat(con, what=tag$what, size=sizeOf, n=nchars);
-        ## Be generous in what types are accepted for names; MATLAB(tm) has
-        ## a habit of sprouting new file features.
-        name <- matToString(name, tag$type);
-        name <- asSafeRName(name);
-        left <<- left - nchars;
-
-        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
-        padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
-        left <<- left - tag$padding;
+      verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
+      padding <- readBinMat(con, what=integer(), size=1L, n=tag$padding);
+      left <<- left - tag$padding;
 
       verbose && cat(verbose, level=-50, "Name: '", name, "'");
 
-        list(tag=tag, name=name);
-      } # readName()
+      list(tag=tag, name=name);
+    } # mat5ReadName()
 
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readFieldNameLength <- function(this) {
-        verbose && enter(verbose, level=-70, "Reading Field Name Length");
-        on.exit(verbose && exit(verbose));
+    mat5ReadFieldNameLength <- function(this) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Field Name Length");
+        on.exit(exit(verbose));
+      }
 
-        tag <- readTag(this);
-        if (tag$type != "miINT32") {
-          throw("Tag type not supported: ", tag$type);
-        }
+      tag <- mat5ReadTag(this);
+      if (tag$type != "miINT32") {
+        throw("Tag type not supported: ", tag$type);
+      }
 
-        sizeOf <- tag$sizeOf %/% 8;
-        len <- tag$nbrOfBytes %/% sizeOf;
-  #      cat("sizeOf=", sizeOf, "\n");
-  #      cat("len=", len, "\n");
-        maxLength <- readBinMat(con, what=integer(), size=sizeOf, n=len);
+      sizeOf <- tag$sizeOf %/% 8;
+      len <- tag$nbrOfBytes %/% sizeOf;
+      maxLength <- readBinMat(con, what=integer(), size=sizeOf, n=len);
 
-        left <<- left - len;
+      left <<- left - len;
 
-        padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
-        left <<- left - tag$padding;
+      padding <- readBinMat(con, what=integer(), size=1L, n=tag$padding);
+      left <<- left - tag$padding;
 
-       verbose && cat(verbose, level=-100, "Field name length+1: ", maxLength);
+     verbose && cat(verbose, level=-100, "Field name length+1: ", maxLength);
 
-        list(tag=tag, maxLength=maxLength);
-      } # readFieldNameLength()
+      list(tag=tag, maxLength=maxLength);
+    } # mat5ReadFieldNameLength()
 
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readFieldNames <- function(this, maxLength) {
-        verbose && enter(verbose, level=-70, "Reading Field Names");
-        on.exit(verbose && exit(verbose));
+    mat5ReadFieldNames <- function(this, maxLength) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Field Names");
+        on.exit(exit(verbose));
+      }
 
-        tag <- readTag(this);
-        ## Be generous in what types are accepted for names; MATLAB(tm) has
-        ## a habit of sprouting new file features.
+      tag <- mat5ReadTag(this);
+      ## Be generous in what types are accepted for names; MATLAB(tm) has
+      ## a habit of sprouting new file features.
 
-        names <- c();
-        sizeOf <- tag$sizeOf %/% 8;
-        nbrOfNames <- tag$nbrOfBytes %/% maxLength;
-  #      cat("tag$nbrOfBytes=",tag$nbrOfBytes,"\n");
-  #      cat("maxLength=",maxLength,"\n");
-  #      cat("nbrOfNames=",nbrOfNames,"\n");
-        for (k in seq(length=nbrOfNames)) {
-      #    name <- readCharMat(con, nchars=maxLength);
-          name <- readBinMat(con, what=tag$what, size=sizeOf, n=maxLength);
-          name <- matToString(name, tag$type);
-          name <- asSafeRName(name);
-          left <<- left - maxLength;
-          names <- c(names, name);
-        }
+      sizeOf <- tag$sizeOf %/% 8;
+      nbrOfNames <- tag$nbrOfBytes %/% maxLength;
+      names <- character(length=nbrOfNames);
+      for (kk in seq(length=nbrOfNames)) {
+        name <- readBinMat(con, what=tag$what, size=sizeOf, n=maxLength);
+        left <<- left - maxLength;
+        name <- matToString(name, tag$type);
+        name <- asSafeRName(name);
+        names[kk] <- name;
+      }
 
-        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
-        padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
-        left <<- left - tag$padding;
+      verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
+      padding <- readBinMat(con, what=integer(), size=1L, n=tag$padding);
+      left <<- left - tag$padding;
 
       verbose && cat(verbose, level=-50, "Field names: ", paste(paste("'", names, "'", sep=""), collapse=", "));
 
-        list(tag=tag, names=names);
-      } # readFieldNames()
+      list(tag=tag, names=names);
+    } # mat5ReadFieldNames()
 
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      # From [1, page 26]:
-      # "Fields Subelement - This subelement contains the value stored in a
-      #  field. These values are MATLAB arrays, represented using the
-      #  miMATRIX format specific to the array type: numeric array, sparse
-      #  array, cell, object or other structure. See the appropriate section
-      #  of this document for details about the MAT-file format of each of
-      #  these array type. MATLAB reads and writes these fields in
-      #  column-major order."
-      readFields <- function(this, names) {
-        verbose && enter(verbose, level=-70, "Reading Fields");
-        on.exit(verbose && exit(verbose));
+    # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+    # From [1, page 26]:
+    # "Fields Subelement - This subelement contains the value stored in a
+    #  field. These values are MATLAB arrays, represented using the
+    #  miMATRIX format specific to the array type: numeric array, sparse
+    #  array, cell, object or other structure. See the appropriate section
+    #  of this document for details about the MAT-file format of each of
+    #  these array type. MATLAB reads and writes these fields in
+    #  column-major order."
+    mat5ReadFields <- function(this, names) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Fields");
+        on.exit(exit(verbose));
+      }
 
-        fields <- list();
-        for (k in seq(names)) {
-          verbose && enter(verbose, level=-3, "Reading field: ", names[k]);
-          field <- readMat5DataElement(this);
-          fields <- c(fields, field);
-          verbose && exit(verbose);
+      fields <- vector("list", length=length(names));
+      for (kk in seq(along=names)) {
+        verbose && enter(verbose, level=-3, "Reading field: ", names[kk]);
+        field <- readMat5DataElement(this);
+        fields[[kk]] <- field;
+        verbose && exit(verbose);
+      }
+      names(fields) <- names;
+
+      fields;
+    } # mat5ReadFields()
+
+
+    mat5ReadValues <- function(this, logical=FALSE) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading Values");
+        on.exit(exit(verbose));
+      }
+
+      tag <- mat5ReadTag(this);
+
+      # "If the 'logical' bit is set, it indicates the array is used for
+      # logical indexing." [4].  This is a rather vague explanation, but
+      # by comparing the byte content of sparse matrices containing
+      # doubles to those containing logical, it appears as if the latter
+      # are stored as single 0/1 bytes, regardless of what the "tag"
+      # is indicating.
+      if (logical) {
+        # Override tag parameters.
+        sizeOf <- 1L;
+        what <- logical(0L);
+      } else {
+        sizeOf <- tag$sizeOf %/% 8;
+        what <- tag$what;
+      }
+
+      len <- tag$nbrOfBytes %/% sizeOf;
+
+      verbose && cat(verbose, level=-100, "Reading ", len, " values each of ", sizeOf, " bytes. In total ", tag$nbrOfBytes, " bytes.");
+
+      value <- readBinMat(con, what=what, size=sizeOf, n=len, signed=tag$signed);
+      verbose && str(verbose, level=-102, value);
+
+      left <<- left - sizeOf*len;
+
+      verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
+
+      padding <- readBinMat(con, what=integer(), size=1L, n=tag$padding);
+
+      left <<- left - tag$padding;
+
+      list(tag=tag, value=value);
+    } # mat5ReadValues()
+
+
+    mat5ReadMiMATRIX <- function(this, tag) {
+      if (verbose) {
+        enter(verbose, level=-70, "Reading miMATRIX");
+        on.exit(exit(verbose));
+        cat(verbose, level=-60, "Argument 'tag':");
+        str(verbose, level=-60, tag);
+      }
+
+      tag <- mat5ReadTag(this);
+
+      if (is.null(tag)) {
+        verbose && cat(verbose, "Nothing more to read. Returning NULL.");
+        return(NULL);
+      }
+
+      if (tag$type == "miMATRIX") {
+        verbose && enter(verbose, level=-70, "Reading a nested miMATRIX");
+        node <- mat5ReadMiMATRIX(this, tag);
+        verbose && exit(verbose);
+        return(node);
+      }
+
+
+      if (tag$type != "miUINT32") {
+        throw("Tag type not supported: ", tag$type);
+      }
+
+      arrayFlags <- mat5ReadArrayFlags(this);
+      if (verbose) {
+        cat(verbose, level=-100, "Array flags:");
+        str(verbose, level=-70, arrayFlags);
+      }
+
+      # Update the array flag tag.  "Why?" /HB 2013-05-23
+      arrayFlags$tag <- tag;
+      arrayFlags$signed <- tag$signed;
+
+      dimensionsArray <- mat5ReadDimensionsArray(this);
+      arrayName <- mat5ReadName(this);
+      verbose && cat(verbose, "Array name: ", sQuote(arrayName$name));
+
+      if (arrayFlags$class == "mxCELL_CLASS") {
+        nbrOfCells <- prod(dimensionsArray$dim);
+        verbose && cat(verbose, level=-4, "Reading mxCELL_CLASS with ", nbrOfCells, " cells.");
+        matrix <- list();
+        for (kk in seq(length=nbrOfCells)) {
+          tag <- mat5ReadTag(this);
+          cell <- mat5ReadMiMATRIX(this, tag);
+          matrix <- c(matrix, cell);
         }
-        names(fields) <- names;
+        matrix <- list(matrix);
+        names(matrix) <- arrayName$name;
+      } else if (arrayFlags$class == "mxSTRUCT_CLASS") {
+        nbrOfCells <- prod(dimensionsArray$dim);
+        verbose && cat(verbose, level=-4, "Reading mxSTRUCT_CLASS with ", nbrOfCells, " cells in structure.");
+        maxLength <- mat5ReadFieldNameLength(this);
+        names <- mat5ReadFieldNames(this, maxLength=maxLength$maxLength);
+        verbose && cat(verbose, level=-100, "Field names: ", paste(names$names, collapse=", "));
+        nbrOfFields <- length(names$names);
+        matrix <- list();
+        for (kk in seq(length=nbrOfCells)) {
+          fields <- mat5ReadFields(this, names=names$names);
+          matrix <- c(matrix, fields);
+        }
+        names(matrix) <- NULL;
 
-        fields;
-      } # readFields()
+        # Set the dimension of the structure
+        dim <- c(nbrOfFields, dimensionsArray$dim);
+        if (prod(dim) > 0) {
+          matrix <- structure(matrix, dim=dim);
+          dimnames <- rep(list(NULL), times=length(dim(matrix)));
+          dimnames[[1L]] <- names$names;
+          dimnames(matrix) <- dimnames;
+        }
 
+        # Finally, put the structure in a named list.
+        matrix <- list(matrix);
+        names(matrix) <- arrayName$name;
 
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readValues <- function(this, logical=FALSE) {
-        verbose && enter(verbose, level=-70, "Reading Values");
-        on.exit(verbose && exit(verbose));
-
-        tag <- readTag(this);
-
-        # "If the 'logical' bit is set, it indicates the array is used for
-        # logical indexing." [4].  This is a rather vague explanation, but
-        # by comparing the byte content of sparse matrices containing
-        # doubles to those containing logical, it appears as if the latter
-        # are stored as single 0/1 bytes, regardless of what the "tag"
-        # is indicating.
-        if (logical) {
-          # Override tag patarmeters.
-          sizeOf <- 1L;
-          what <- logical(0);
+        if (verbose) {
+          cat(verbose, level=-60, "Read a 'struct':");
+          str(verbose, level=-60, matrix);
+        }
+      } else if (arrayFlags$class == "mxOBJECT_CLASS") {
+        className <- mat5ReadName(this)$name;
+        maxLength <- mat5ReadFieldNameLength(this);
+        verbose && cat(verbose, level=-4, "Reading mxOBJECT_CLASS of class '", className, "' with ", maxLength, " fields.");
+        names <- mat5ReadFieldNames(this, maxLength=maxLength$maxLength);
+        fields <- mat5ReadFields(this, names=names$names);
+        class(fields) <- className;
+        matrix <- list(fields);
+        names(matrix) <- arrayName$name;
+      } else if (arrayFlags$complex) {
+        verbose && enter(verbose, level=-4, "Reading complex matrix")
+        pr <- mat5ReadValues(this, logical=arrayFlags$logical);
+        if (left > 0L) {
+          pi <- mat5ReadValues(this, logical=arrayFlags$logical);
         } else {
-          sizeOf <- tag$sizeOf %/% 8;
-          what <- tag$what;
+            stop("XX");
+          pi <- NULL;
         }
+        matrix <- complex(real=pr$value, imaginary=pi$value);
 
-        len <- tag$nbrOfBytes %/% sizeOf;
+        # Set dimension of complex matrix
+        dim(matrix) <- dimensionsArray$dim;
+        verbose && str(verbose, level=-10, matrix);
 
-        verbose && cat(verbose, level=-100, "Reading ", len, " values each of ", sizeOf, " bytes. In total ", tag$nbrOfBytes, " bytes.");
+        # Put into a named list
+        matrix <- list(matrix);
+        names(matrix) <- arrayName$name;
+        verbose && exit(verbose, suffix=paste("...done: '", names(matrix), "' [",
+                 mode(matrix), ": ", paste(dim(matrix), collapse="x"),
+                                               " elements]", sep=""));
+      } else if (arrayFlags$class == "mxSPARSE_CLASS") {
+        # Dimensions of the sparse matrix
+        nrow <- dimensionsArray$dim[1L];
+        ncol <- dimensionsArray$dim[2L];
 
-        value <- readBinMat(con, what=what, size=sizeOf, n=len, signed=tag$signed);
-        verbose && str(verbose, level=-102, value);
+        verbose && cat(verbose, level=-4, "Reading mxSPARSE_CLASS ", nrow, "x", ncol, " matrix.");
 
-        left <<- left - sizeOf*len;
+        # From [2, page5-6]
+        # "Sparse Matrices
+        #  Sparse matrices have a different storage convention in MATLAB. The
+        #  parameters pr and pi are still arrays of double-precision numbers,
+        #  but there are three additional parameters, nzmax, ir, and jc:
+        #  * nzmax - is an integer that contains the length of ir, pr, and,
+        #    if it exists, pi. It is the maximum possible number of nonzero
+        #    elements in the sparse matrix.
+        #  * ir - points to an integer array of length nzmax containing the
+        #    row indices of the corresponding elements in pr and pi.
+        #  * jc - points to an integer array of length N+1 that contains
+        #    column index information. For j, in the range 0 <= j <= N-1,
+        #    jc[j] is the index in ir and pr (and pi if it exists) of the
+        #    first nonzero entry in the jth column and jc[j+1] - 1 index of
+        #    the last nonzero entry. As a result, jc[N] is also equal to nnz,
+        #    the number of nonzero entries in the matrix. If nnz is less
+        #    than nzmax, then more nonzero entries can be inserted in the
+        #    array without allocating additional storage."
 
-        verbose && cat(verbose, level=-101, "Reading ", tag$padding, " padding bytes.");
+        # From mxGetIr in [2]:
+        # "The nzmax field holds an integer value that signifies the number
+        #  of elements in the ir, pr, and, if it exists, the pi arrays. The
+        #  value of nzmax is always greater than or equal to the number of
+        #  nonzero elements in a sparse mxArray. In addition, the value of
+        #  nzmax is always less than or equal to the number of rows times
+        #  the number of columns."
+        nzmax <- arrayFlags$nzmax;
+        ir <- c();
+        jc <- c();
+        pr <- c();
+        if (nzmax > 0L) {
+          # Read the row indices for non-zero values (index start at zero!)
+          #
+          # From mxGetIr in [2]:
+          # "Each value in an ir array indicates a row (offset by 1) at which
+          #  a nonzero element can be found. (The jc array is an index that
+          #  indirectly specifies a column where nonzero elements can be found.)"
+          #
+          # and from mxSetIr in [2]:
+          # "The ir array must be in column-major order. That means that the
+          #  ir array must define the row positions in column 1 (if any) first,
+          #  then the row positions in column 2 (if any) second, and so on through
+          #  column N. Within each column, row position 1 must appear prior to
+          #  row position 2, and so on."
+          ir <- mat5ReadValues(this)$value;
 
-        padding <- readBinMat(con, what=integer(), size=1, n=tag$padding);
-
-        left <<- left - tag$padding;
-
-        list(tag=tag, value=value);
-      } # readValues()
-
-
-
-      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      readMiMATRIX <- function(this, tag) {
-        verbose && enter(verbose, level=-70, "Reading miMATRIX");
-        on.exit(verbose && exit(verbose));
-        verbose && cat(verbose, level=-60, "Argument 'tag':");
-        verbose && str(verbose, level=-60, tag);
-
-        tag <- readTag(this);
-
-        if (is.null(tag)) {
-          verbose && cat(verbose, "Nothing more to read. Returning NULL.");
-          verbose && exit(verbose);
-          return(NULL);
-        }
-
-        if (tag$type == "miMATRIX") {
-          verbose && enter(verbose, level=-70, "Reading a nested miMATRIX");
-          node <- readMiMATRIX(this, tag);
-          verbose && exit(verbose);
-          verbose && exit(verbose);
-          return(node);
-        }
-
-
-        if (tag$type != "miUINT32") {
-          throw("Tag type not supported: ", tag$type);
-        }
-
-        arrayFlags <- readArrayFlags(this);
-        verbose && cat(verbose, level=-100, "Array flags:");
-        verbose && str(verbose, level=-70, arrayFlags);
-
-        arrayFlags$tag <- tag;
-        arrayFlags$signed <- isSigned(tag$type);
-
-        dimensionsArray <- readDimensionsArray(this);
-        arrayName <- readName(this);
-
-#str(arrayName)
-
-        if (arrayFlags$class == "mxCELL_CLASS") {
-          nbrOfCells <- prod(dimensionsArray$dim);
-          verbose && cat(verbose, level=-4, "Reading mxCELL_CLASS with ", nbrOfCells, " cells.");
-          matrix <- list();
-          for (kk in seq(length=nbrOfCells)) {
-            tag <- readTag(this);
-            cell <- readMiMATRIX(this, tag);
-            matrix <- c(matrix, cell);
-          }
-          matrix <- list(matrix);
-          names(matrix) <- arrayName$name;
-        } else if (arrayFlags$class == "mxSTRUCT_CLASS") {
-          nbrOfCells <- prod(dimensionsArray$dim);
-          verbose && cat(verbose, level=-4, "Reading mxSTRUCT_CLASS with ", nbrOfCells, " cells in structure.");
-          maxLength <- readFieldNameLength(this);
-          names <- readFieldNames(this, maxLength=maxLength$maxLength);
-          verbose && cat(verbose, level=-100, "Field names: ", paste(names$names, collapse=", "));
-          nbrOfFields <- length(names$names);
-          matrix <- list();
-          for (kk in seq(length=nbrOfCells)) {
-#            cat("Cell: ", kk, "...\n", sep="");
-              fields <- readFields(this, names=names$names);
-#            str(fields);
-            matrix <- c(matrix, fields);
-#            cat("Cell: ", kk, "...done\n", sep="");
-          }
-          names(matrix) <- NULL;
-
-          # Set the dimension of the structure
-          dim <- c(nbrOfFields, dimensionsArray$dim);
-          if (prod(dim) > 0) {
-            matrix <- structure(matrix, dim=dim);
-            dimnames <- rep(list(NULL), length(dim(matrix)));
-            dimnames[[1]] <- names$names;
-            dimnames(matrix) <- dimnames;
+          # Note that the indices for MAT v5 sparse arrays start at 0 (not 1).
+          ir <- ir + 1L;
+          if (any(ir < 1L | ir > nrow)) {
+            stop("MAT v5 file format error: Some elements in row vector 'ir' (sparse arrays) are out of range [1,", nrow, "].");
           }
 
-          # Finally, put the structure in a named list.
+          #  "* jc - points to an integer array of length N+1 that contains..."
+          jc <- mat5ReadValues(this)$value;
+          if (length(jc) != ncol+1L) {
+            stop("MAT v5 file format error: Length of column vector 'jc' (sparse arrays) is not ", ncol, "+1 as expected: ", length(jc));
+          }
+
+          # Read vector
+          pr <- mat5ReadValues(this, logical=arrayFlags$logical)$value;
+
+          if (verbose) {
+            str(verbose, level=-102, header);
+            str(verbose, level=-102, ir);
+            str(verbose, level=-102, jc);
+            str(verbose, level=-102, pr);
+          }
+
+          # "This subelement contains the imaginary data in the array, if one
+          #  or more of the numeric values in the MATLAB array is a complex
+          #  number (if the complex bit is set in Array Flags)." [1, p20]
+          if (arrayFlags$complex) {
+            # Read imaginary part
+            pi <- mat5ReadValues(this, logical=arrayFlags$logical)$value;
+            verbose && str(verbose, level=-102, pi);
+          }
+
+          ## Deal with odd MATLAB(tm) discrepancies.
+          nzmax <- min(nzmax, jc[ncol+1L]);
+          if (nzmax < length(ir)) { ir <- ir[1:nzmax]; }
+          if (nzmax < length(pr)) { pr <- pr[1:nzmax]; }
+          if (arrayFlags$complex) {
+            if (nzmax < length(pi)) { pi <- pi[1:nzmax]; }
+            pr <- complex(real=pr, imaginary=pi);
+            pi <- NULL; # Not needed anymore
+          }
+        } # if (nzmax > 0)
+
+        if (sparseMatrixClass == "Matrix"
+            && require("Matrix", quietly=TRUE)) {
+          # Logical or numeric sparse Matrix?
+          if (is.logical(pr)) {
+            className <- "lgCMatrix";
+          } else {
+            pr <- as.double(pr);
+            className <- "dgCMatrix";
+          }
+          matrix <- new(className,
+                        x=pr, p=as.integer(jc), i=as.integer(ir-1L),
+                        Dim=as.integer(c(nrow,ncol)));
           matrix <- list(matrix);
           names(matrix) <- arrayName$name;
-
-          verbose && cat(verbose, level=-60, "Read a 'struct':");
-          verbose && str(verbose, level=-60, matrix);
-
-#old#          maxLength <- readFieldNameLength(this);
-#old#          names <- readFieldNames(this, maxLength=maxLength$maxLength);
-#old#         print(names);
-#old#          fields <- readFields(this, names=names$names);
-#old#          names(fields) <- arrayName$name;
-#old#          str(fields);
-#old#          matrix <- list(fields);
-#old#          names(matrix) <- arrayName$name;
-        } else if (arrayFlags$class == "mxOBJECT_CLASS") {
-          className <- readName(this)$name;
-          maxLength <- readFieldNameLength(this);
-          verbose && cat(verbose, level=-4, "Reading mxOBJECT_CLASS of class '", className, "' with ", maxLength, " fields.");
-          names <- readFieldNames(this, maxLength=maxLength$maxLength);
-          fields <- readFields(this, names=names$names);
-          class(fields) <- className;
-          matrix <- list(fields);
-          names(matrix) <- arrayName$name;
-        } else if (arrayFlags$complex) {
-          verbose && enter(verbose, level=-4, "Reading complex matrix.")
-          pr <- readValues(this, logical=arrayFlags$logical);
-          if (left > 0)
-            pi <- readValues(this, logical=arrayFlags$logical);
-          matrix <- complex(real=pr$value, imaginary=pi$value);
-
-          # Set dimension of complex matrix
-          dim(matrix) <- dimensionsArray$dim;
-          verbose && str(verbose, level=-10, matrix);
-
-          # Put into a named list
+        }
+        else if (sparseMatrixClass == "SparseM"
+                 && require("SparseM", quietly=TRUE)) {
+          if (is.logical(pr)) {
+            # Sparse matrices of SparseM cannot hold logical values.
+            pr <- as.double(pr);
+          } else {
+            pr <- as.double(pr);
+          }
+          matrix <- new("matrix.csc",
+                        ra=pr, ja=as.integer(ir), ia=as.integer(jc+1L),
+                        dimension=as.integer(c(nrow, ncol)));
           matrix <- list(matrix);
           names(matrix) <- arrayName$name;
-          verbose && exit(verbose, suffix=paste("...done: '", names(matrix), "' [",
-                   mode(matrix), ": ", paste(dim(matrix), collapse="x"),
-                                                 " elements]", sep=""));
-        } else if (arrayFlags$class == "mxSPARSE_CLASS") {
-          # Dimensions of the sparse matrix
-          nrow <- dimensionsArray$dim[1];
-          ncol <- dimensionsArray$dim[2];
+        }
+        else {
+          # Create expanded matrix...
+          if (is.logical(pr)) {
+            defValue <- FALSE;
+          } else {
+            defValue <- 0;
+          }
+          matrix <- matrix(defValue, nrow=nrow, ncol=ncol);
+          attr(matrix, "name") <- arrayName$name;
 
-          verbose && cat(verbose, level=-4, "Reading mxSPARSE_CLASS ", nrow, "x", ncol, " matrix.");
-
-          # From [2, page5-6]
-          # "Sparse Matrices
-          #  Sparse matrices have a different storage convention in MATLAB. The
-          #  parameters pr and pi are still arrays of double-precision numbers,
-          #  but there are three additional parameters, nzmax, ir, and jc:
-          #  * nzmax - is an integer that contains the length of ir, pr, and,
-          #    if it exists, pi. It is the maximum possible number of nonzero
-          #    elements in the sparse matrix.
-          #  * ir - points to an integer array of length nzmax containing the
-          #    row indices of the corresponding elements in pr and pi.
-          #  * jc - points to an integer array of length N+1 that contains
+          # Now, for each column insert the non-zero elements
+          #
+          #  "* jc - points to an integer array of length N+1 that contains
           #    column index information. For j, in the range 0 <= j <= N-1,
           #    jc[j] is the index in ir and pr (and pi if it exists) of the
           #    first nonzero entry in the jth column and jc[j+1] - 1 index of
@@ -1712,182 +2025,70 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           #    the number of nonzero entries in the matrix. If nnz is less
           #    than nzmax, then more nonzero entries can be inserted in the
           #    array without allocating additional storage."
-
-          # From mxGetIr in [2]:
-          # "The nzmax field holds an integer value that signifies the number
-          #  of elements in the ir, pr, and, if it exists, the pi arrays. The
-          #  value of nzmax is always greater than or equal to the number of
-          #  nonzero elements in a sparse mxArray. In addition, the value of
-          #  nzmax is always less than or equal to the number of rows times
-          #  the number of columns."
-          nzmax <- arrayFlags$nzmax;
-          ir <- c();
-          jc <- c();
-          pr <- c();
-          if (nzmax > 0) {
-            # Read the row indices for non-zero values (index start at zero!)
-            #
-            # From mxGetIr in [2]:
-            # "Each value in an ir array indicates a row (offset by 1) at which
-            #  a nonzero element can be found. (The jc array is an index that
-            #  indirectly specifies a column where nonzero elements can be found.)"
-            #
-            # and from mxSetIr in [2]:
-            # "The ir array must be in column-major order. That means that the
-            #  ir array must define the row positions in column 1 (if any) first,
-            #  then the row positions in column 2 (if any) second, and so on through
-            #  column N. Within each column, row position 1 must appear prior to
-            #  row position 2, and so on."
-            ir <- readValues(this)$value;
-
-            # Note that the indices for MAT v5 sparse arrays start at 0 (not 1).
-            ir <- ir + 1;
-            if (any(ir < 1 | ir > nrow)) {
-              stop("MAT v5 file format error: Some elements in row vector 'ir' (sparse arrays) are out of range [1,", nrow, "].");
-            }
-
-            #  "* jc - points to an integer array of length N+1 that contains..."
-            jc <- readValues(this)$value;
-            if (length(jc) != ncol+1) {
-              stop("MAT v5 file format error: Length of column vector 'jc' (sparse arrays) is not ", ncol, "+1 as expected: ", length(jc));
-            }
-
-            # Read vector
-            pr <- readValues(this, logical=arrayFlags$logical)$value;
-
-            verbose && str(verbose, level=-102, header);
-            verbose && str(verbose, level=-102, ir);
-            verbose && str(verbose, level=-102, jc);
-            verbose && str(verbose, level=-102, pr);
-
-            # "This subelement contains the imaginary data in the array, if one
-            #  or more of the numeric values in the MATLAB array is a complex
-            #  number (if the complex bit is set in Array Flags)." [1, p20]
-            if (arrayFlags$complex) {
-              # Read imaginary part
-              pi <- readValues(this, logical=arrayFlags$logical)$value;
-              verbose && str(verbose, level=-102, pi);
-            }
-
-            ## Deal with odd MATLAB(tm) discrepancies.
-            nzmax <- min(nzmax, jc[ncol+1]);
-            if (nzmax < length(ir)) { ir <- ir[1:nzmax]; }
-            if (nzmax < length(pr)) { pr <- pr[1:nzmax]; }
-            if (arrayFlags$complex) {
-              if (nzmax < length(pi)) { pi <- pi[1:nzmax]; }
-              pr <- complex(real=pr, imaginary=pi);
-              rm(pi); # Not needed anymore!
-            }
-          } # if (nzmax > 0)
-
-          if (sparseMatrixClass == "Matrix"
-              && require("Matrix", quietly=TRUE)) {
-            # Logical or numeric sparse Matrix?
-            if (is.logical(pr)) {
-              className <- "lgCMatrix";
-            } else {
-              pr <- as.double(pr);
-              className <- "dgCMatrix";
-            }
-            matrix <- new(className,
-                          x=pr, p=as.integer(jc), i=as.integer(ir-1),
-                          Dim=as.integer(c(nrow,ncol)));
-            matrix <- list(matrix);
-            names(matrix) <- arrayName$name;
+          #
+          #    Note: This is *not* how MAT v4 works.
+          for (col in seq(length=length(jc)-1L)) {
+            first <- jc[col];
+            last  <- jc[col+1L]-1L;
+            idx <- seq(from=first, to=last);
+            value <- pr[idx];
+            row <- ir[idx];
+            ok <- is.finite(row);
+            row <- row[ok];
+            value <- value[ok];
+            matrix[row,col] <- value;
           }
-          else if (sparseMatrixClass == "SparseM"
-                   && require("SparseM", quietly=TRUE)) {
-            if (is.logical(pr)) {
-              # Sparse matrices of SparseM cannot hold logical values.
-              pr <- as.double(pr);
-            } else {
-              pr <- as.double(pr);
-            }
-            matrix <- new("matrix.csc",
-                          ra=pr, ja=as.integer(ir), ia=as.integer(jc+1),
-                          dimension=as.integer(c(nrow, ncol)));
-            matrix <- list(matrix);
-            names(matrix) <- arrayName$name;
-          }
-          else {
-            # Create expanded matrix...
-            if (is.logical(pr)) {
-              defValue <- FALSE;
-            } else {
-              defValue <- 0;
-            }
-            matrix <- matrix(defValue, nrow=nrow, ncol=ncol);
-            attr(matrix, "name") <- arrayName$name;
-
-            # Now, for each column insert the non-zero elements
-            #
-            #  "* jc - points to an integer array of length N+1 that contains
-            #    column index information. For j, in the range 0 <= j <= N-1,
-            #    jc[j] is the index in ir and pr (and pi if it exists) of the
-            #    first nonzero entry in the jth column and jc[j+1] - 1 index of
-            #    the last nonzero entry. As a result, jc[N] is also equal to nnz,
-            #    the number of nonzero entries in the matrix. If nnz is less
-            #    than nzmax, then more nonzero entries can be inserted in the
-            #    array without allocating additional storage."
-            #
-            #    Note: This is *not* how MAT v4 works.
-            for (col in seq(length=length(jc)-1)) {
-              first <- jc[col];
-              last  <- jc[col+1]-1;
-              idx <- seq(from=first, to=last);
-              value <- pr[idx];
-              row <- ir[idx];
-              ok <- is.finite(row);
-              row <- row[ok];
-              value <- value[ok];
-              matrix[row,col] <- value;
-            }
-            rm(ir,jc,first,last,idx,value,row); # Not needed anymore
-
-            matrix <- list(matrix);
-            names(matrix) <- arrayName$name;
-          }
-          # End mxSPARSE_CLASS
-        } else {
-          data <- readValues(this, logical=arrayFlags$logical);
-          matrix <- data$value;
-
-          verbose && cat(verbose, level=-5, "Converting to ", arrayFlags$class, " matrix.");
-          if (arrayFlags$class == "mxDOUBLE_CLASS") {
-            matrix <- as.double(matrix);
-            dim(matrix) <- dimensionsArray$dim;
-          } else if (arrayFlags$class == "mxSINGLE_CLASS") {
-            matrix <- as.single(matrix);
-            dim(matrix) <- dimensionsArray$dim;
-          } else if (is.element(arrayFlags$class, c("mxINT8_CLASS", "mxUINT8_CLASS", "mxINT16_CLASS", "mxUINT16_CLASS", "mxINT32_CLASS", "mxUINT32_CLASS"))) {
-            matrix <- as.integer(matrix);
-            dim(matrix) <- dimensionsArray$dim;
-          } else if (is.element(arrayFlags$class, c("mxINT64_CLASS", "mxUINT64_CLASS"))) {
-            # Coerce 64-bit integers to doubles.
-            matrix <- as.integer(matrix);
-            dim(matrix) <- dimensionsArray$dim;
-          } else if (arrayFlags$class == "mxCHAR_CLASS") {
-            matrix <- matToCharArray(matrix, tag$type);
-            dim <- dimensionsArray$dim;
-            # AD HOC/special/illegal case?  /HB 2010-09-18
-            if (length(matrix) == 0 && prod(dim) > 0) {
-              matrix <- "";
-            }
-            dim(matrix) <- dim;
-            matrix <- apply(matrix, MARGIN=1, FUN=paste, collapse="");
-            matrix <- as.matrix(matrix);
-          } else {
-            stop("Unknown or unsupported class id in array flags: ", arrayFlags$class);
-          }
+          # Not needed anymore
+          ir <- jc <- first <- last <- idx <- value <- row <- NULL;
 
           matrix <- list(matrix);
           names(matrix) <- arrayName$name;
         }
+        # End mxSPARSE_CLASS
+      } else {
+        data <- mat5ReadValues(this, logical=arrayFlags$logical);
+        matrix <- data$value;
 
-        matrix;
-      } # readMiMATRIX()
+        verbose && cat(verbose, level=-5, "Converting to ", arrayFlags$class, " matrix.");
+        if (arrayFlags$class == "mxDOUBLE_CLASS") {
+          matrix <- as.double(matrix);
+          dim(matrix) <- dimensionsArray$dim;
+        } else if (arrayFlags$class == "mxSINGLE_CLASS") {
+          matrix <- as.single(matrix);
+          dim(matrix) <- dimensionsArray$dim;
+        } else if (is.element(arrayFlags$class, c("mxINT8_CLASS", "mxUINT8_CLASS", "mxINT16_CLASS", "mxUINT16_CLASS", "mxINT32_CLASS", "mxUINT32_CLASS"))) {
+          matrix <- as.integer(matrix);
+          dim(matrix) <- dimensionsArray$dim;
+        } else if (is.element(arrayFlags$class, c("mxINT64_CLASS", "mxUINT64_CLASS"))) {
+          # Coerce 64-bit integers to doubles.
+          matrix <- as.integer(matrix);
+          dim(matrix) <- dimensionsArray$dim;
+        } else if (arrayFlags$class == "mxCHAR_CLASS") {
+          matrix <- matToCharArray(matrix, tag$type);
+          dim <- dimensionsArray$dim;
+          # AD HOC/special/illegal case?  /HB 2010-09-18
+          if (length(matrix) == 0L && prod(dim) > 0) {
+            matrix <- "";
+          }
+          dim(matrix) <- dim;
+          matrix <- apply(matrix, MARGIN=1L, FUN=paste, collapse="");
+          matrix <- as.matrix(matrix);
+        } else {
+          stop("Unknown or unsupported class id in array flags: ", arrayFlags$class);
+        }
+
+        matrix <- list(matrix);
+        names(matrix) <- arrayName$name;
+      }
+
+      matrix;
+    } # mat5ReadMiMATRIX()
 
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Function to read a MAT v5 Data Element
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    readMat5DataElement <- function(this) {
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       # General structure of a MAT v5 Data Element:
       #
@@ -1901,22 +2102,26 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #   +---------------------------------------+
       #
       # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
-      tag <- readTag(this);
+      tag <- mat5ReadTag(this);
       if (is.null(tag))
         return(NULL);
 
-      if (tag$nbrOfBytes == 0)
+      if (tag$nbrOfBytes == 0L)
         return(list(NULL));
 
-      left <<- tag$nbrOfBytes;
       if (tag$type == "miMATRIX") {
         verbose && enter(verbose, level=-3, "Reading (outer) miMATRIX");
-        data <- readMiMATRIX(this, tag);
-        verbose && str(verbose, level=-4, data);
-        verbose && exit(verbose);
+        # Used to test if a matrix read contains an imaginary part too.
+        left <<- tag$nbrOfBytes;
+
+        data <- mat5ReadMiMATRIX(this, tag);
+        if (verbose) {
+          str(verbose, level=-4, data);
+          exit(verbose);
+        }
       } else {
         verbose && printf(verbose, level=-3, "Reading (outer) %.0f integers", tag$nbrOfBytes);
-        data <- readBinMat(con, what=integer(), size=1, n=tag$nbrOfBytes, signed=tag$signed);
+        data <- readBinMat(con, what=integer(), size=1L, n=tag$nbrOfBytes, signed=tag$signed);
       }
 
       data;
@@ -1933,9 +2138,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
     header <- readMat5Header(this, firstFourBytes=firstFourBytes);
 
-    verbose && cat(verbose, level=-100, "Read MAT v5 header:");
-    verbose && print(verbose, level=-100, header);
-    verbose && cat(verbose, level=-100, "Endian: ", detectedEndian);
+    if (verbose) {
+      cat(verbose, level=-100, "Read MAT v5 header:");
+      print(verbose, level=-100, header);
+      cat(verbose, level=-100, "Endian: ", detectedEndian);
+    }
 
     result <- list();
     repeat {
@@ -1947,7 +2154,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       }
       result <- append(result, data);
       verbose && exit(verbose, suffix=paste("...done: '", names(data), "' [",
-                   mode(data[[1]]), ": ", paste(dim(data[[1]]), collapse="x"),
+                   mode(data[[1L]]), ": ", paste(dim(data[[1L]]), collapse="x"),
                                                                 "]", sep=""));
     }
 
@@ -1992,6 +2199,13 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         verbose && cat(verbose, level=-1, "Binary connection closed.");
       });
     }
+  } else if (inherits(con, "raw")) {
+    verbose && cat(verbose, level=-1, "Opens raw connection: ", paste(head(raw), collapse=", "));
+    con <- rawConnection(con, open="rb");
+    on.exit({
+      close(con);
+      verbose && cat(verbose, level=-1, "Binary file closed.");
+    });
   } else {
     # For all other types of values of 'con' make it into a character string.
     # This will for instance also make it possible to use object of class
@@ -2011,6 +2225,20 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   if (summary(con)$text != "binary")
     stop("Can only read a MAT file structure from a *binary* connection.");
 
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Debug information
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if (verbose && isVisible(verbose, -100)) {
+    enter(verbose, "R.matlab options");
+    cat(verbose, "R.matlab::readMat/rawBufferSize: ", rawBufferSize);
+    cat(verbose, "R.matlab::readMat/rawBufferMethod: ", rawBufferMethod);
+    cat(verbose, "R.matlab::readMat/decompressWith: ", decompressWith);
+    cat(verbose, "R.matlab::readMat/onDecompressError: ", getOption("R.matlab::readMat/onDecompressError", "error"));
+
+    exit(verbose);
+  }
+
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # "MATLAB uses the first four bytes to determine if a MAT-file uses a
   #  Version 5 format or a Version 4 format. If any of these bytes
@@ -2023,16 +2251,16 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   #
   # Thus, we read the first four bytes and test if it can be a MAT v4 file.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  nbrOfBytesRead <- 0;
-  firstFourBytes <- readBinMat(con, what=integer(), size=1, n=4);
+  nbrOfBytesRead <- 0L;
+  firstFourBytes <- readBinMat(con, what=integer(), size=1L, n=4L);
   if (is.null(firstFourBytes))
     stop("MAT file format error: Nothing to read. Empty input stream.");
 
   if (isMat4(firstFourBytes)) {
-    verbose && cat(verbose, level=0, "Trying to read MAT v4 file stream...");
+    verbose && cat(verbose, level=0, "Trying to read MAT v4 file stream.");
     readMat4(con, firstFourBytes=firstFourBytes, maxLength=maxLength);
   } else {
-    verbose && cat(verbose, level=0, "Trying to read MAT v5 file stream...");
+    verbose && cat(verbose, level=0, "Trying to read MAT v5 file stream.");
     readMat5(con, firstFourBytes=firstFourBytes, maxLength=maxLength);
   }
 }) # readMat()
@@ -2041,6 +2269,31 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 ###########################################################################
 # HISTORY:
+# 2013-07-11
+# o Now the 'INTERNAL ERROR' message that people forward to the package
+#   maintainer also includes the version of the R.matlab package.
+# 2013-05-25
+# o SPEEDUP: Dropped the explicit gc() call after decompressing.
+# o SPEEDUP: Replaced all rm() calls with NULL assignments.
+# 2013-05-22
+# o SPEEDUP: Major speed up by dropping rm() calls in some internal
+#   functions that are called many times.  For instance, a single
+#   rm(tmp) call in the local function that reads MAT read tags
+#   decreased the reading time of a single MAT file by 25%!
+# o CLEANUP: Identified constants and named them in all upper case.
+# o Now readMat() no longer generates warnings reporting on "In readBin(
+#   con = rawBufferT, what = what, size = size, n = n, signed = signed,  :
+#   'signed = FALSE' is only valid for integers of sizes 1 and 2."
+# 2013-05-22
+# o CONSISTENCY: Renamed option 'R.matlab::decompressWith' to
+#   'R.matlab::readMat/decompressWith'.
+# o SPEEDUP: Previously each call to internal readMat5DataElement()
+#   would create a set of local utility functions.  Now these are
+#   create only once per call to internal readMat5().
+# o SPEEDUP: mat5IsSigned() now does fewer assignments/concatenations.
+# o SPEEDUP: Minor speedups of readMat() when 'verbose' argument is enabled.
+# o DOCUMENTATION: Restructured help("readMat").  Added a section on
+#   'Speed performance'.
 # 2012-06-07
 # o BUG FIX: readMat() could not read sparse matrices containing logical
 #   values, only numerics.  This was because the 'logical' bit in the
@@ -2144,9 +2397,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 #   Thanks to Chris Sims, Princeton University, for the patch.
 # 2005-05-02
 # o Updated such that multidimensional (not only one and two dims)
-#   Matlab struct:s can be read.
+#   MATLAB struct:s can be read.
 # 2005-04-22
-# o Updated to read Matlab struct:s as R structure:s.
+# o Updated to read MATLAB struct:s as R structure:s.
 # o BUG FIX: Reading empty struct:s (and cells) tried to read one
 #   field because seq(0) and not seq(length=0) was used. Updated all
 #   occurances of this problem.
@@ -2171,8 +2424,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 # o Added support for sparse matrices for MAT v5. Wow, that was
 #   tricky, because the documention was sparse (ha!).
 # o Added support for sparse matrices for MAT v4, by generating
-#   sparse matrices in Matlab and saving the in MAT v4 format and
-#   looking at the 'help sparse' in Matlab.
+#   sparse matrices in MATLAB and saving the in MAT v4 format and
+#   looking at the 'help sparse' in MATLAB.
 # o BUG FIX: When reading the MOPT header before I was incorrectly
 #   assuming it consisted of four bytes [M,O,P,T], but it is as the
 #   documentation "hints" an integer that should be separated into
