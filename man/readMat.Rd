@@ -21,8 +21,8 @@
 }
 
 \usage{
-\method{readMat}{default}(con, maxLength=NULL, fixNames=TRUE, verbose=FALSE,
-  sparseMatrixClass=c("Matrix", "SparseM", "matrix"), ...)
+\method{readMat}{default}(con, maxLength=NULL, fixNames=TRUE, drop=c("singletonLists"),
+  sparseMatrixClass=c("Matrix", "SparseM", "matrix"), verbose=FALSE, ...)
 }
 
 \arguments{
@@ -37,6 +37,13 @@
     If \code{NULL}, data will be read until End Of File has been reached.}
   \item{fixNames}{If \code{\link[base:logical]{TRUE}}, underscores within names of MATLAB variables
     and fields are converted to periods.}
+  \item{drop}{A \code{\link[base]{character}} \code{\link[base]{vector}} specifying cases when one or more dimensions
+    of elements should be dropped in order to decrease the amount of "nestedness"
+    of the returned data structure.  This only applies to the MAT v5 file format.}
+  \item{sparseMatrixClass}{If \code{"matrix"}, a sparse matrix is expanded to
+    a regular \code{\link[base]{matrix}}.  If either \code{"Matrix"} (default) or \code{"SparseM"},
+    the sparse matrix representation by the package of the same name will be used.
+    These packages are only loaded if the a sparse matrix is read.}
   \item{verbose}{Either a \code{\link[base]{logical}}, a \code{\link[base]{numeric}}, or a \code{\link[R.utils]{Verbose}}
     object specifying how much verbose/debug information is written to
     standard output. If a Verbose object, how detailed the information is
@@ -45,10 +52,6 @@
     the threshold is set to -1 (minimal). If \code{\link[base:logical]{FALSE}}, no output is written
     (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
   }
-  \item{sparseMatrixClass}{If \code{"matrix"}, a sparse matrix is expanded to
-    a regular \code{\link[base]{matrix}}.  If either \code{"Matrix"} (default) or \code{"SparseM"},
-    the sparse matrix representation by the package of the same name will be used.
-    These packages are only loaded if the a sparse matrix is read.}
   \item{...}{Not used.}
 }
 
@@ -97,6 +100,13 @@
  non-compressed MAT version 5 files.
 }
 
+\section{About MAT files saved in MATLAB using '-v7.3'}{
+ This function does not support MAT files saved in MATLAB as
+ \code{save('foo.mat', '-v7.3')}.
+ Such MAT files are of a completely different file format [5,6]
+ compared to those saved with, say, \code{'-v7'}.
+}
+
 \section{Reading MAT file structures input streams}{
  Reads a MAT file structure from an input stream, either until End of File
  is detected or until \code{maxLength} bytes has been read.
@@ -131,6 +141,8 @@ print(data)
   [2] The MathWorks Inc., \emph{MATLAB - Application Program Interface Guide, version 5}, 1998.\cr
   [3] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version 7}, September 2009, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
   [4] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version R2012a}, September 2012, \url{http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf}\cr
+  [5] The MathWorks Inc., \emph{MATLAB - MAT-File Versions}, July 2013, \url{http://www.mathworks.com/help/matlab/import_export/mat-file-versions.html}\cr
+  [6] Undocumented Matlab, \emph{Improving save performance}, May 2013, \url{http://undocumentedmatlab.com/blog/improving-save-performance/}\cr
 }
 
 

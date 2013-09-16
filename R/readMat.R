@@ -25,6 +25,13 @@
 #     If \code{NULL}, data will be read until End Of File has been reached.}
 #   \item{fixNames}{If @TRUE, underscores within names of MATLAB variables
 #     and fields are converted to periods.}
+#   \item{drop}{A @character @vector specifying cases when one or more dimensions
+#     of elements should be dropped in order to decrease the amount of "nestedness"
+#     of the returned data structure.  This only applies to the MAT v5 file format.}
+#   \item{sparseMatrixClass}{If \code{"matrix"}, a sparse matrix is expanded to
+#     a regular @matrix.  If either \code{"Matrix"} (default) or \code{"SparseM"},
+#     the sparse matrix representation by the package of the same name will be used.
+#     These packages are only loaded if the a sparse matrix is read.}
 #   \item{verbose}{Either a @logical, a @numeric, or a @see "R.utils::Verbose"
 #     object specifying how much verbose/debug information is written to
 #     standard output. If a Verbose object, how detailed the information is
@@ -33,10 +40,6 @@
 #     the threshold is set to -1 (minimal). If @FALSE, no output is written
 #     (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
 #   }
-#   \item{sparseMatrixClass}{If \code{"matrix"}, a sparse matrix is expanded to
-#     a regular @matrix.  If either \code{"Matrix"} (default) or \code{"SparseM"},
-#     the sparse matrix representation by the package of the same name will be used.
-#     These packages are only loaded if the a sparse matrix is read.}
 #   \item{...}{Not used.}
 # }
 #
@@ -85,6 +88,13 @@
 #  non-compressed MAT version 5 files.
 # }
 #
+# \section{About MAT files saved in MATLAB using '-v7.3'}{
+#  This function does not support MAT files saved in MATLAB as
+#  \code{save('foo.mat', '-v7.3')}.
+#  Such MAT files are of a completely different file format [5,6]
+#  compared to those saved with, say, \code{'-v7'}.
+# }
+#
 # \section{Reading MAT file structures input streams}{
 #  Reads a MAT file structure from an input stream, either until End of File
 #  is detected or until \code{maxLength} bytes has been read.
@@ -114,12 +124,14 @@
 #   [2] The MathWorks Inc., \emph{MATLAB - Application Program Interface Guide, version 5}, 1998.\cr
 #   [3] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version 7}, September 2009, \url{http://www.mathworks.com/access/helpdesk/help/pdf_doc/matlab/matfile_format.pdf}\cr
 #   [4] The MathWorks Inc., \emph{MATLAB - MAT-File Format, version R2012a}, September 2012, \url{http://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf}\cr
+#   [5] The MathWorks Inc., \emph{MATLAB - MAT-File Versions}, July 2013, \url{http://www.mathworks.com/help/matlab/import_export/mat-file-versions.html}\cr
+#   [6] Undocumented Matlab, \emph{Improving save performance}, May 2013, \url{http://undocumentedmatlab.com/blog/improving-save-performance/}\cr
 # }
 #
 # @keyword file
 # @keyword IO
 #*/###########################################################################
-setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, verbose=FALSE, sparseMatrixClass=c("Matrix", "SparseM", "matrix"), ...) {
+setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, drop=c("singletonLists"), sparseMatrixClass=c("Matrix", "SparseM", "matrix"), verbose=FALSE, ...) {
   # The object 'this' is actually never used, but we might put 'con' or
   # similar in the structure some day, so we keep it for now. /HB 2007-06-10
   this <- list();
@@ -549,6 +561,10 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # non-ASCII characters are replaced by NA.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   matToCharArray <- function(ary, type) {
+    # AD HOC/special/illegal case?  /HB 2013-09-11
+    if (length(ary) == 0L) {
+      return(matrix(character(0L), nrow=0L, ncol=0L));
+    }
     fn <- charConverter(type);
     sapply0(ary, FUN=fn);
   }
@@ -1713,10 +1729,21 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         on.exit(exit(verbose));
       }
 
+      # Precalculations
+      dropSingletonLists <- is.element("singletonLists", drop);
+
       fields <- vector("list", length=length(names));
       for (kk in seq(along=names)) {
-        verbose && enter(verbose, level=-3, "Reading field: ", names[kk]);
+        verbose && enter(verbose, level=-3, "Reading field: ", sQuote(names[kk]));
         field <- readMat5DataElement(this);
+        # If read element is a list with a single element, then return that
+        # latter element by itself to decrease the amount of nestedness.
+        if (dropSingletonLists) {
+          if (is.list(field) && length(field) <= 1L &&
+              (is.null(names(field)) || identical(names(field), ""))) {
+            field <- field[[1L]];
+          }
+        }
         fields[[kk]] <- field;
         verbose && exit(verbose);
       }
@@ -1809,6 +1836,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       arrayName <- mat5ReadName(this);
       verbose && cat(verbose, "Array name: ", sQuote(arrayName$name));
 
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      # (a) mxCELL_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
       if (arrayFlags$class == "mxCELL_CLASS") {
         nbrOfCells <- prod(dimensionsArray$dim);
         verbose && cat(verbose, level=-4, "Reading mxCELL_CLASS with ", nbrOfCells, " cells.");
@@ -1820,7 +1850,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         }
         matrix <- list(matrix);
         names(matrix) <- arrayName$name;
-      } else if (arrayFlags$class == "mxSTRUCT_CLASS") {
+      } # (a) mxCELL_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      # (b) mxSTRUCT_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      else if (arrayFlags$class == "mxSTRUCT_CLASS") {
         nbrOfCells <- prod(dimensionsArray$dim);
         verbose && cat(verbose, level=-4, "Reading mxSTRUCT_CLASS with ", nbrOfCells, " cells in structure.");
         maxLength <- mat5ReadFieldNameLength(this);
@@ -1851,7 +1885,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           cat(verbose, level=-60, "Read a 'struct':");
           str(verbose, level=-60, matrix);
         }
-      } else if (arrayFlags$class == "mxOBJECT_CLASS") {
+      } # (b) mxSTRUCT_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      # (c) mxOBJECT_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      else if (arrayFlags$class == "mxOBJECT_CLASS") {
         className <- mat5ReadName(this)$name;
         maxLength <- mat5ReadFieldNameLength(this);
         verbose && cat(verbose, level=-4, "Reading mxOBJECT_CLASS of class '", className, "' with ", maxLength, " fields.");
@@ -1881,7 +1919,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
         verbose && exit(verbose, suffix=paste("...done: '", names(matrix), "' [",
                  mode(matrix), ": ", paste(dim(matrix), collapse="x"),
                                                " elements]", sep=""));
-      } else if (arrayFlags$class == "mxSPARSE_CLASS") {
+      } # (c) mxOBJECT_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      # (d) mxSPARSE_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      else if (arrayFlags$class == "mxSPARSE_CLASS") {
         # Dimensions of the sparse matrix
         nrow <- dimensionsArray$dim[1L];
         ncol <- dimensionsArray$dim[2L];
@@ -2044,8 +2086,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
           matrix <- list(matrix);
           names(matrix) <- arrayName$name;
         }
-        # End mxSPARSE_CLASS
-      } else {
+      } # (d) mxSPARSE_CLASS
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      # (e) Everything else but (a) mxCELL_CLASS, (b) mxSTRUCT_CLASS,
+      #    (c) mxOBJECT_CLASS, and (d) mxSPARSE_CLASS.
+      # -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -
+      else {
         data <- mat5ReadValues(this, logical=arrayFlags$logical);
         matrix <- data$value;
 
@@ -2079,7 +2125,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
         matrix <- list(matrix);
         names(matrix) <- arrayName$name;
-      }
+      } # (e) Everything else
 
       matrix;
     } # mat5ReadMiMATRIX()
@@ -2096,7 +2142,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
       #   +----+----+----+----+----+----+----+----+
       #   |    Data type      |  Number of Bytes  |  Tag
       #   +---------------------------------------+
-            #   |                                       |
+      #   |                                       |
       #   |             Variable size             |  Data
       #   |                                       |
       #   +---------------------------------------+
@@ -2170,6 +2216,23 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Argument 'sparseMatrixClass':
   sparseMatrixClass <- match.arg(sparseMatrixClass);
+
+  # Argument 'drop':
+  if (is.logical(drop)) {
+    stopifnot(length(drop) == 1L);
+    if (drop) {
+      # Use defaults
+      drop <- eval(formals(sys.function(sys.parent()))$drop);
+      drop <- match.arg(drop);
+    } else {
+      drop <- NULL;
+    }
+  } else if (is.character(drop)) {
+    drop <- match.arg(drop);
+  } else {
+    stop("Argument 'drop' should either be a logical or a character vector: ", class(drop)[1L]);
+  }
+
 
   # Argument 'verbose':
   if (inherits(verbose, "Verbose")) {
@@ -2269,6 +2332,19 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, v
 
 ###########################################################################
 # HISTORY:
+# 2013-09-11
+# o CONSISTENCY:  Added argument 'drop' to readMat() to control how
+#   singleton dimensions of for instance nested lists are dropped or not.
+#   The defaults are now such that R.matlab v2.0.4 is consistent with
+#   R.matlab v1.7.1 (R.matlab v2.0.0-2.0.3 were not).  Thanks to
+#   Claudia Beleites at IPHT Jena, Germany for reporting on this.
+# 2013-09-10
+# o WORKAROUND/BUG FIX: readMat() would an error when parsing an empty
+#   'mxCHAR_CLASS' matrix with a 0x0 dimension.  It is not clear whether
+#   this is a valid MAT v5 structure or not, but I've added a workaround.
+#   Thanks Claudia Beleites at IPHT Jena, Germany for reporting on this.
+# 2013-07-17
+# o DOCUMENTATION: Added section of '-v7.3' MAT files to help("readMat").
 # 2013-07-11
 # o Now the 'INTERNAL ERROR' message that people forward to the package
 #   maintainer also includes the version of the R.matlab package.
