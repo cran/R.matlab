@@ -37,8 +37,7 @@
 #     standard output. If a Verbose object, how detailed the information is
 #     is specified by the threshold level of the object. If a numeric, the
 #     value is used to set the threshold of a new Verbose object. If @TRUE,
-#     the threshold is set to -1 (minimal). If @FALSE, no output is written
-#     (and neither is the \link[R.utils:R.utils-package]{R.utils} package required).
+#     the threshold is set to -1 (minimal). If @FALSE, no output is written.
 #   }
 #   \item{...}{Not used.}
 # }
@@ -704,10 +703,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
       # Is Rcompression package available?
       if (is.element("Rcompression", decompressWith)) {
-        if (require("R.utils")) {
-          if (!isPackageInstalled("Rcompression")) {
-            decompressWith <- setdiff(decompressWith, "Rcompression");
-          }
+        if (!isPackageInstalled("Rcompression")) {
+          decompressWith <- setdiff(decompressWith, "Rcompression");
         }
       }
 
@@ -1505,7 +1502,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
             msg <- ex$message;
             env <- globalenv(); # To please 'R CMD check'
             assign("R.matlab.debug.zraw", zraw, envir=env);
-            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (using '%s'). Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
+            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (%s [%d bytes]) using '%s'. Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", hpaste(zraw, maxHead=8, maxTail=8), length(zraw), attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
             onError <- getOption("R.matlab::readMat/onDecompressError", "error");
             if (identical(onError, "warning")) {
               warning(msg);
@@ -2236,20 +2233,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
   # Argument 'verbose':
   if (inherits(verbose, "Verbose")) {
-    # Use cat() of R.utils here (and not the one in 'base')
-    cat <- R.utils::cat;
   } else if (is.numeric(verbose)) {
-    require("R.utils") || throw("Package not available: R.utils");
     verbose <- Verbose(threshold=verbose);
-    # Use cat() of R.utils here (and not the one in 'base')
-    cat <- R.utils::cat;
   } else {
     verbose <- as.logical(verbose);
     if (verbose) {
-      require("R.utils") || throw("Package not available: R.utils");
       verbose <- Verbose(threshold=-1);
-      # Use cat() of R.utils here (and not the one in 'base')
-      cat <- R.utils::cat;
     }
   }
 
@@ -2332,6 +2321,11 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
 ###########################################################################
 # HISTORY:
+# 2013-11-28
+# o Now the 'INTERNAL ERROR' message readMat() throws on failed
+#   decompression also includes the first and last bytes of the data
+#   block that it tried to decompress.  This will further help
+#   troubleshooting.
 # 2013-09-11
 # o CONSISTENCY:  Added argument 'drop' to readMat() to control how
 #   singleton dimensions of for instance nested lists are dropped or not.
