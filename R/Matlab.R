@@ -31,8 +31,8 @@
 #
 #   Also, the starting of the MatlabServer is simplier from MATLAB v7,
 #   although it is pretty straightforward for MATLAB v6 too.
-#   It is easier in MATLAB v7, because the Java class required for
-#   remote-data-transfer can be automatically/dynamically added to
+#   It is easier in MATLAB v7 and above, because the Java class required
+#   for remote-data-transfer can be automatically/dynamically added to
 #   the MATLAB Java classpath, whereas for MATLAB v6 it has to be
 #   added manually (see below).
 # }
@@ -86,9 +86,9 @@
 #   In R you can type \code{system.file("externals", package="R.matlab")}
 #   to find out the path to MatlabServer.m.
 #
-#   \bold{For MATLAB v6 only:} Contrary to MATLAB v7, MATLAB v6 cannot
-#   find the InputStreamByteWrapper class automatically. Instead, the
-#   so called Java classpath has to be set manually. In MATLAB, type
+#   \bold{For MATLAB v6 only:} Contrary to MATLAB v7 and above, MATLAB v6
+#   cannot find the InputStreamByteWrapper class automatically. Instead,
+#   the so called Java classpath has to be set manually. In MATLAB, type
 #   \code{which('classpath.txt')} to find where the default
 #   MATLAB classpath.txt file is located. Copy this file to the
 #   \emph{current directory}, and append the \emph{path} (the directory)
@@ -123,21 +123,22 @@
 # \section{Confirmed MATLAB versions}{
 #   This package has been confirmed to work \emph{successfully} out of
 #   the box together with the following MATLAB versions:
-#   MATLAB v6.1.0.450 (R12.1),
-#   MATLAB v6.5.0.180913a (R13),
-#   MATLAB v7.0.0.19901 (R14),
-#   MATLAB v7.0.1.24704 (R14SP1),
-#   MATLAB v7.0.4.365 (R14SP2),
-#   MATLAB v7.2.0.232 (R2006a),
-#   MATLAB v7.4.0 (R2007a),
-#   MATLAB v7.7.0.471 (R2008b),
-#   MATLAB v7.10.0.499 (R2010a),
-#   MATLAB v7.11.0.584 (R2010b), and
-#   MATLAB v7.14.0.739 (R2012a).
+#   MATLAB v6.1.0.450 (R12.1) [Jun 2001],
+#   MATLAB v6.5.0.180913a (R13) [Jul 2002],
+#   MATLAB v7.0.0.19901 (R14) [Jun 2004],
+#   MATLAB v7.0.1.24704 (R14SP1) [Oct 2004],
+#   MATLAB v7.0.4.365 (R14SP2) [Mar 2005],
+#   MATLAB v7.2.0.232 (R2006a) [Mar 2006],
+#   MATLAB v7.4.0 (R2007a) [Mar 2007]],
+#   MATLAB v7.7.0.471 (R2008b) [Oct 2008],
+#   MATLAB v7.10.0.499 (R2010a) [Mar 2010],
+#   MATLAB v7.11.0.584 (R2010b) [Sep 2010],
+#   MATLAB v7.14.0.739 (R2012a) [Mar 2012], and
+#   MATLAB v8.2.0.701 (R2013b) [Sep 2013].
 #   If you successfully use a different/higher MATLAB version,
 #   please tell us, so we can share it here.
 #
-#   It does \emph{not} work with MATLAB v5 or before!
+#   It does \emph{not} work with MATLAB v5 or before.
 # }
 #
 # \section{Security}{
@@ -228,7 +229,7 @@ setMethodS3("as.character", "Matlab", function(x, ...) {
          as.character(this$remote)
        );
   s <- sprintf("%s The connection to the MATLAB server is %s.", s,
-         (if (isOpen(this)) "opened" else "is closed (not opened)")
+         (if (isOpen(this)) "opened" else "closed (not opened)")
        );
   s;
 })
@@ -362,7 +363,9 @@ setMethodS3("open", "Matlab", function(con, trials=30, interval=1, ...) {
     ok <- FALSE;
     tryCatch({
       printf(this$.verbose, level=-1, "Try #%d.\n", as.integer(count));
-      this$con <- socketConnection(host=this$host, port=as.integer(this$port), open="a+b", blocking=TRUE);
+      suppressWarnings({
+        this$con <- socketConnection(host=this$host, port=as.integer(this$port), open="a+b", blocking=TRUE);
+      });
       ok <- TRUE;
       # It is not possible to return() from tryCatch()! /HB 050224
     }, error = function(ex) {
@@ -719,35 +722,27 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   enter(this$.verbose, "Starting the MATLAB server");
   on.exit(exit(this$.verbose), add=TRUE);
 
-  # Make sure MatlabServer.m, InputStreamByteWrapper.class, and
-  # InputStreamByteWrapper.java exist in the current directory, otherwise
-  # create copies of them in the current directory.
-  filename <- "MatlabServer.m";
-  if (!file.exists(filename)) {
-    src <- system.file("externals", filename, package="R.matlab");
-    file.copy(src, filename, overwrite=FALSE);
-    printf(this$.verbose, level=-1, "MATLAB server file copied: '%s'\n", filename);
-  } else {
-    printf(this$.verbose, level=-1, "MATLAB server file found: '%s'\n", filename);
-  }
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Make MATLAB server files available in the current directory
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  srcPath <- system.file("externals", package="R.matlab");
+  filenames <- c("MatlabServer.m", "InputStreamByteWrapper.class",
+                 "InputStreamByteWrapper.java");
+  for (filename in filenames) {
+    enter(this$.verbose, level=-1, sprintf("MATLAB server file '%s'", filename));
+    if (isFile(filename)) {
+      cat(this$.verbose, level=-1, "Already exists. Skipping.");
+    } else {
+      src <- file.path(srcPath, filename);
+      copyFile(src, filename, verbose=less(this$.verbose, 50));
+    }
 
-  filename <- "InputStreamByteWrapper.class";
-  if (!file.exists(filename)) {
-    src <- system.file("externals", filename, package="R.matlab");
-    file.copy(src, filename, overwrite=FALSE);
-    printf(this$.verbose, level=-1, "MATLAB server file copied: '%s'\n", filename);
-  } else {
-    printf(this$.verbose, level=-1, "MATLAB server file found: '%s'\n", filename);
-  }
+    # Sanity check
+    filename <- Arguments$getReadablePathname(filename, mustExist=TRUE);
 
-  filename <- "InputStreamByteWrapper.java";
-  if (!file.exists(filename)) {
-    src <- system.file("externals", filename, package="R.matlab");
-    file.copy(src, filename, overwrite=FALSE);
-    printf(this$.verbose, level=-1, "MATLAB server file copied: '%s'\n", filename);
-  } else {
-    printf(this$.verbose, level=-1, "MATLAB server file found: '%s'\n", filename);
-  }
+    exit(this$.verbose);
+  } # for (filename ...)
+
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Setup call string to start MATLAB
@@ -781,7 +776,7 @@ setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), 
   printf(this$.verbose, level=-1, "Return value: %d\n", as.integer(res));
 
   res;
-}, static=TRUE);
+}, static=TRUE)
 
 
 
@@ -1137,6 +1132,15 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2014-01-28
+# o CLEANUP: open() for Matlab no longer generates warnings on
+#   "socketConnection(...) ... cannot be opened", which occured while
+#   waiting/polling for the Matlab server to startup and respond.
+# o ROBUSTNESS: Now Matlab$startServer() asserts that all MATLAB server
+#   files that are indeed successfully copied.
+# 2014-01-21
+# o TYPO: A closed Matlab connection would report that the "...MATLAB
+#   server is is closed (not opened)." - note "is is".
 # 2011-12-08
 # o DOCUMENTATION: Added a section to help(Matlab) on how to connect
 #   through firewalls.

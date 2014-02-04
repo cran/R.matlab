@@ -140,6 +140,18 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   # General functions to read both MAT v4 and MAT v5 files.              BEGIN
   #===========================================================================
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Emulate support for argument 'keep.source' in older versions of R
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if (getRversion() < "3.0.0") {
+    parse <- function(..., keep.source=getOption("keep.source")) {
+      oopts <- options(keep.source=keep.source);
+      on.exit(options(oopts));
+      base::parse(...);
+    } # parse()
+  }
+
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # willRead(), hasHead() and isDone() operators keep count on the number of
   # bytes actually read and compares it with 'maxLength'.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1088,6 +1100,20 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Function to read a MAT v4 Matrix Data Format
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    textMatrixCollapse <- getOption("R.matlab::readMat/v4/textMatrixCollapse", "byrow");
+    textMatrixCollapse <- match.arg(textMatrixCollapse, choices=c("byrow", "bycolumn", "none"));
+    if (textMatrixCollapse == "byrow") {
+      mat4TextMatrixToString <- function(data) {
+        apply(data, MARGIN=1L, FUN=paste, collapse="", sep="");
+      }
+    } else if (textMatrixCollapse == "bycolumn") {
+      mat4TextMatrixToString <- function(data) {
+        apply(data, MARGIN=2L, FUN=paste, collapse="", sep="");
+      }
+    } else {
+      mat4TextMatrixToString <- function(data) data;
+    }
+
     readMat4Data <- function(con, header) {
       # "Immediately following the fixed length header is the data whose length
       #  is dependent on the variables in the fixed length header:"
@@ -1121,7 +1147,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
         # Make into a matrix
         dim(data) <- c(header$mrows, header$ncols);
-        data <- apply(data, MARGIN=1L, FUN=paste, sep="", collapse="");
+
+        # Turn text matrix intro strings (if at all)
+        data <- mat4TextMatrixToString(data);
       } else if (header$matrixType %in% c("numeric", "sparse")) {
         real <- readBinMat(con, what=header$what, size=header$size, signed=header$signed, n=n);
         if (header$imagf != 0L) {
@@ -1204,7 +1232,13 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
       if (verbose) {
         cat(verbose, level=-60, "Matrix elements:\n");
         str(verbose, level=-60, data);
-      }
+        if (header$matrixType == "text") {
+          cat(verbose, level=-60, "Distribution of string lengths:");
+          t <- table(nchar(data));
+          names(t) <- paste("n=", names(t), sep="")
+          print(verbose, level=-60, t)
+        }
+    }
 
       data <- list(data);
       names(data) <- name;
@@ -1502,7 +1536,50 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
             msg <- ex$message;
             env <- globalenv(); # To please 'R CMD check'
             assign("R.matlab.debug.zraw", zraw, envir=env);
-            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (%s [%d bytes]) using '%s'. Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", hpaste(zraw, maxHead=8, maxTail=8), length(zraw), attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
+            # Guess type of compression by inspecting the header bytes;
+            # Source: http://www.groupsrv.com/science/about474488.html
+            known <- list(
+              compress = "1f9d",
+              gzip     = "1f8b",
+              zip      = "504b",
+              bzip2    = "425a",
+              pack     = "1f1e",
+              LZH      = "1f50",
+              # zlib ("common")
+              zlib     = "7801, 785e, 789c, 78da",
+              # zlib ("rare")
+              zlib     = "081d, 085b, 0899, 08d7, 1819, 1857, 1895, 18d3,
+                          2815, 2853, 2891, 28cf, 3811, 384f, 388d, 38cb,
+                          480d, 484b, 4889, 48c7, 5809, 5847, 5885, 58c3,
+                          6805, 6843, 6881, 68de",
+              # zlib ("very rare")
+              zlib     = "083c, 087a, 08b8, 08f6, 1838, 1876, 18b4, 18f2,
+                          2834, 2872, 28b0, 28ee, 3830, 386e, 38ac, 38ea,
+                          482c, 486a, 48a8, 48e6, 5828, 5866, 58a4, 58e2,
+                          6824, 6862, 68bf, 68fd, 783f, 787d, 78bb, 78f9"
+            );
+
+            twobytes <- zraw[1:2];
+            what <- "<unknown>";
+            for (kk in seq_along(known)) {
+              bytes <- known[[kk]];
+              bytes <- gsub("[ \n]*", "", bytes);
+              bytes <- unlist(strsplit(bytes, split=",", fixed=TRUE));
+              bytes <- gsub("(..)(..)", "\\\\x\\1\\\\x\\2", bytes);
+              bytes <- sprintf("charToRaw('%s')", bytes);
+              bytes <- lapply(bytes, FUN=function(code) {
+                eval(parse(text=code, keep.source=FALSE));
+              })
+              for (jj in seq_along(bytes)) {
+                if (all(bytes[[jj]] == twobytes)) {
+                  what <- names(known)[kk];
+                  break;
+                }
+              }
+              if (what != "<unknown>") break;
+            }
+
+            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (%s [%d bytes; first two bytes => '%s']) using '%s'. Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", hpaste(zraw, maxHead=8, maxTail=8), length(zraw), what, attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
             onError <- getOption("R.matlab::readMat/onDecompressError", "error");
             if (identical(onError, "warning")) {
               warning(msg);
@@ -1741,7 +1818,9 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
             field <- field[[1L]];
           }
         }
-        fields[[kk]] <- field;
+        if (!is.null(field)) {
+          fields[[kk]] <- field;
+        }
         verbose && exit(verbose);
       }
       names(fields) <- names;
@@ -2321,6 +2400,20 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
 ###########################################################################
 # HISTORY:
+# 2014-02-03
+# o BACKWARD COMPATIBILITY: For R (< 3.0.0), readMat() now defines a
+#   local parse() function that supports argument 'keep.source'.
+# 2014-01-28
+# o BUG FIX: readMat(..., drop="singletonLists") would throw an error
+#   if the singleton list dropped contained NULL and that NULL was
+#   assigned to an element of an outer list, resulting in that element
+#   being dropped.
+# o Whenever there is an uncompress error in readMat(), it now tries to
+#   infer what type of compression the buffer has by inspecting the first
+#   two bytes and include the type in the error message.
+# o Added option 'R.matlab::readMat/v4/textMatrixCollapse' controlling
+#   whether MAT v4 text matrixes are collapsed into strings by row
+#  ("byrow"; default), by column ("bycolumn") or not at all ("none").
 # 2013-11-28
 # o Now the 'INTERNAL ERROR' message readMat() throws on failed
 #   decompression also includes the first and last bytes of the data

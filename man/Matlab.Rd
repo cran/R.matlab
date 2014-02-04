@@ -79,8 +79,8 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
 
   Also, the starting of the MatlabServer is simplier from MATLAB v7,
   although it is pretty straightforward for MATLAB v6 too.
-  It is easier in MATLAB v7, because the Java class required for
-  remote-data-transfer can be automatically/dynamically added to
+  It is easier in MATLAB v7 and above, because the Java class required
+  for remote-data-transfer can be automatically/dynamically added to
   the MATLAB Java classpath, whereas for MATLAB v6 it has to be
   added manually (see below).
 }
@@ -134,9 +134,9 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
   In R you can type \code{system.file("externals", package="R.matlab")}
   to find out the path to MatlabServer.m.
 
-  \bold{For MATLAB v6 only:} Contrary to MATLAB v7, MATLAB v6 cannot
-  find the InputStreamByteWrapper class automatically. Instead, the
-  so called Java classpath has to be set manually. In MATLAB, type
+  \bold{For MATLAB v6 only:} Contrary to MATLAB v7 and above, MATLAB v6
+  cannot find the InputStreamByteWrapper class automatically. Instead,
+  the so called Java classpath has to be set manually. In MATLAB, type
   \code{which('classpath.txt')} to find where the default
   MATLAB classpath.txt file is located. Copy this file to the
   \emph{current directory}, and append the \emph{path} (the directory)
@@ -169,7 +169,7 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
 To get started, type one of these: helpwin, helpdesk, or demo.
 For product information, visit www.mathworks.com.
 
-Running MatlabServer v1.3.5
+Running MatlabServer v2.2.0
 MATLAB v7.x or higher detected.
 Saving with option -V6.
 Added InputStreamByteWrapper to dynamic Java CLASSPATH.
@@ -189,21 +189,22 @@ Trying to open server socket (port 9999)...done.
 \section{Confirmed MATLAB versions}{
   This package has been confirmed to work \emph{successfully} out of
   the box together with the following MATLAB versions:
-  MATLAB v6.1.0.450 (R12.1),
-  MATLAB v6.5.0.180913a (R13),
-  MATLAB v7.0.0.19901 (R14),
-  MATLAB v7.0.1.24704 (R14SP1),
-  MATLAB v7.0.4.365 (R14SP2),
-  MATLAB v7.2.0.232 (R2006a),
-  MATLAB v7.4.0 (R2007a),
-  MATLAB v7.7.0.471 (R2008b),
-  MATLAB v7.10.0.499 (R2010a),
-  MATLAB v7.11.0.584 (R2010b), and
-  MATLAB v7.14.0.739 (R2012a).
+  MATLAB v6.1.0.450 (R12.1) [Jun 2001],
+  MATLAB v6.5.0.180913a (R13) [Jul 2002],
+  MATLAB v7.0.0.19901 (R14) [Jun 2004],
+  MATLAB v7.0.1.24704 (R14SP1) [Oct 2004],
+  MATLAB v7.0.4.365 (R14SP2) [Mar 2005],
+  MATLAB v7.2.0.232 (R2006a) [Mar 2006],
+  MATLAB v7.4.0 (R2007a) [Mar 2007]],
+  MATLAB v7.7.0.471 (R2008b) [Oct 2008],
+  MATLAB v7.10.0.499 (R2010a) [Mar 2010],
+  MATLAB v7.11.0.584 (R2010b) [Sep 2010],
+  MATLAB v7.14.0.739 (R2012a) [Mar 2012], and
+  MATLAB v8.2.0.701 (R2013b) [Sep 2013].
   If you successfully use a different/higher MATLAB version,
   please tell us, so we can share it here.
 
-  It does \emph{not} work with MATLAB v5 or before!
+  It does \emph{not} work with MATLAB v5 or before.
 }
 
 \section{Security}{

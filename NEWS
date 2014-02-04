@@ -1,6 +1,43 @@
 Package: R.matlab
 =================
 
+Version: 2.2.3 [2014-02-03]
+o BACKWARD COMPATIBILITY: The inference on the type of compression
+  used in the error message when uncompression failed would itself
+  generate an error on R (< 3.0.0).
+o Bumped up package dependencies.
+
+
+Version: 2.2.2 [2014-01-28]
+o Added option 'R.matlab::readMat/v4/textMatrixCollapse' controlling
+  whether MAT v4 text matrixes are collapsed into strings by row
+  ("byrow"; default), by column ("bycolumn") or not at all ("none").
+o Whenever there is an uncompress error in readMat(), it now tries to
+  infer what type of compression the buffer has by inspecting the first
+  two bytes and include the type in the error message.
+o BUG FIX: readMat(..., drop="singletonLists") would throw an error
+  if the singleton list dropped contained NULL and that NULL was
+  assigned to an element of an outer list, resulting in that element
+  being dropped.
+
+
+Version: 2.2.1 [2014-01-28]
+o ROBUSTNESS: Now Matlab$startServer() asserts that all MATLAB server
+  files that are indeed successfully copied, iff missing.
+o CLEANUP: open() for Matlab no longer generates warnings on
+  "socketConnection(...) ... cannot be opened", which occured while
+  waiting/polling for the Matlab server to startup and respond.
+
+
+Version: 2.2.0 [2014-01-21]
+o DOCUMENTATION: Updated list of Matlab versions for which the
+  package has been confirmed to work with.
+o BUG FIX: The MatlabServer.m script would incorrectly consider
+  Matlab v8 and above as Matlab v6.  Thanks to Frank Stephen at NREL
+  for reporting on this and providing a patch.
+o Bumped up package dependencies.
+
+
 Version: 2.1.0 [2013-11-29]
 o CLEANUP: Now package only imports R.oo (no longer attaches it).
   Also, the package now imports R.utils (used to suggest and attach
