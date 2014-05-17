@@ -143,10 +143,12 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   # Emulate support for argument 'keep.source' in older versions of R
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if (getRversion() < "3.0.0") {
+    # Look up base::parse() once; '::' is very expensive
+    base_parse <- base::parse;
     parse <- function(..., keep.source=getOption("keep.source")) {
       oopts <- options(keep.source=keep.source);
       on.exit(options(oopts));
-      base::parse(...);
+      base_parse(...);
     } # parse()
   }
 
@@ -213,17 +215,6 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
     ASCII[1L] <- eval(parse(text="\"\\000\""));
   }
 
-
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  # sapply(X, ...) function that treats length(X) == 0 specially
-  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  sapply0 <- function(X, FUN, ...) {
-    if (length(X) == 0L) {
-      FUN(X, ...);
-    } else {
-      base::sapply(X, FUN=FUN, ...);
-    }
-  } # sapply0()
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Function to convert a vector of integers into a vector of ASCII chars.
@@ -510,49 +501,68 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 ##     ary;
 ##   }
 
-  convertGeneric <- function(ary) {
+  convertASCII <- function(ary) {
+    ## WAS: The below would also drop newlines etc. /HB 2014-04-29
     ## Set entires outside the ASCII range to NA except for NUL.
-    ary[ary > 127L | (ary != 0L & ary < 32L)] <- NA_integer_;
+    # ary[ary > 127L | (ary != 0L & ary < 32L)] <- NA_integer_;
+
+    ## (a) From http://www.wikipedia.org/wiki/UTF-8:
+    ## "The first 128 characters of Unicode, which correspond
+    ##  one-to-one with ASCII, are encoded using a single octet
+    ##  with the same binary value as ASCII, making valid ASCII
+    ##  text valid UTF-8-encoded Unicode as well.".
+    ## (b) From [4]:
+    ## "Note that the elements of a text matrix are stored as
+    ##  floating-point numbers between 0 and 255 representing
+    ##  ASCII-encoded characters."
+    ## From (a) + (b), we infer that we can keep characters in
+    ## Matlab text that is non-UTF encoded (when this function
+    ## is used/called) as 8-bit ASCII characters (0-255).  So,
+    ## if we for some odd reason get symbols outside this range,
+    ## we drop them, because they cannot be interpreted as ASCII
+    ## and our ASCII-to-UTF8 converted does not know how to
+    ## interpret/translate such symbols). /HB 2014-04-29
+    ary[ary > 255L] <- NA_integer_;
+
+    # Can't we use base::intToUtf8(ary) here? /HB 2014-04-29
     convertUTF8(ary);
-  }
+  } # convertASCII()
 
-  ## By default, just pick out the ASCII range.
-  convertUTF16 <- convertUTF32 <- convertGeneric;
+  ## By default, just pick out the ASCII range, ...
+  convertUTF16 <- convertUTF32 <- convertASCII;
 
+  ## However, if there's support for more on the current system,
+  ## use that instead.
   if (capabilities("iconv")) {
     utfs <- grep("UTF", iconvlist(), value=TRUE);
     ## The convertUTF{16,32} routines below work in big-endian, so
     ## look for UTF-16BE or UTF16BE, etc..
-    has.utf16 <- utils::head(grep("UTF-?16BE", utfs, value=TRUE), n=1L);
-    has.utf32 <- utils::head(grep("UTF-?32BE", utfs, value=TRUE), n=1L);
-    if (length(has.utf16) > 0L) {
+    utf16 <- utils::head(grep("UTF-?16BE", utfs, value=TRUE), n=1L);
+    if (length(utf16) > 0L) {
       convertUTF16 <- function(ary) {
-        n <- length(ary);
-        ary16 <- paste(intToChar(c(sapply(ary,
-                                          function(x) { c(x%/%256,
-                                                          x%%256); }))),
-                       collapse="");
-        iconv(ary16, has.utf16, "UTF-8");
-      }
-      convertUTF32 <- function(ary) {
-        n <- length(ary);
-        ary32 <- paste(intToChar(c(sapply(ary,
-                                          function(x) { c((x%/%16777216)%%256,
-                                                          (x%/%65536)%%256,
-                                                          (x%/%256)%%256,
-                                                          x%%256); }))),
-                       collapse="");
-        iconv(ary32, has.utf32, "UTF-8");
+        ary16 <- paste(intToChar(c(sapply(ary, FUN=function(x) {
+          c(x%/%256, x%%256);
+        }))), collapse="");
+        iconv(ary16, from=utf16, to="UTF-8");
       }
     }
-  }
+    utf32 <- utils::head(grep("UTF-?32BE", utfs, value=TRUE), n=1L);
+    if (length(utf32) > 0L) {
+      convertUTF32 <- function(ary) {
+        ary32 <- paste(intToChar(c(sapply(ary, FUN=function(x) {
+          c((x%/%16777216)%%256, (x%/%65536)%%256, (x%/%256)%%256, x%%256);
+        }))), collapse="");
+        iconv(ary32, from=utf32, to="UTF-8");
+      }
+    }
+  } # if (capabilities("iconv"))
 
   charConverter <- function(type) {
     switch(type,
            miUTF8 = convertUTF8,
            miUTF16 = convertUTF16,
            miUTF32 = convertUTF32,
-           convertGeneric);
+           convertASCII);
   }
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -571,6 +581,15 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   # implementations will convert the charset correctly.  Otherwise
   # non-ASCII characters are replaced by NA.
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # sapply(X, ...) function that treats length(X) == 0 specially
+  sapply0 <- function(X, FUN, ...) {
+    if (length(X) == 0L) {
+      FUN(X, ...);
+    } else {
+      sapply(X, FUN=FUN, ...);
+    }
+  } # sapply0()
+
   matToCharArray <- function(ary, type) {
     # AD HOC/special/illegal case?  /HB 2013-09-11
     if (length(ary) == 0L) {
@@ -610,10 +629,136 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   #   Returns a @raw @vector (or a @character string if 'asText' is TRUE).
   # }
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  uncompressMemDecompress <- function(zraw, asText=TRUE, type="gzip", ...) {
-    # To please R CMD check for R versions before R v2.10.0
-    memDecompress <- NULL; rm(list="memDecompress");
-    unzraw <- memDecompress(zraw, type=type, asChar=asText, ...);
+  typeOfCompression <- function(zraw, ...) {
+    # Guess type of compression by inspecting the header bytes;
+    # Source: http://www.groupsrv.com/science/about474488.html
+    known <- list(
+      compress = matrix(c(c(0x1f, 0x9d)), nrow=2L),
+      gzip     = matrix(c(c(0x1f, 0x8b)), nrow=2L),
+      zip      = matrix(c(c(0x50, 0x4b)), nrow=2L),
+      bzip2    = matrix(c(c(0x42, 0x5a)), nrow=2L),
+      pack     = matrix(c(c(0x1f, 0x1e)), nrow=2L),
+      LZH      = matrix(c(c(0x1f, 0x50)), nrow=2L),
+      zlib     = matrix(c(
+        # zlib ("common")
+        c(0x78, 0x01), c(0x78, 0x5e), c(0x78, 0x9c), c(0x78, 0xda),
+        # zlib ("rare"),
+        c(0x08, 0x1d), c(0x08, 0x5b), c(0x08, 0x99), c(0x08, 0xd7), c(0x18, 0x19), c(0x18, 0x57), c(0x18, 0x95), c(0x18, 0xd3), c(0x28, 0x15), c(0x28, 0x53), c(0x28, 0x91), c(0x28, 0xcf), c(0x38, 0x11), c(0x38, 0x4f), c(0x38, 0x8d), c(0x38, 0xcb), c(0x48, 0x0d), c(0x48, 0x4b), c(0x48, 0x89), c(0x48, 0xc7), c(0x58, 0x09), c(0x58, 0x47), c(0x58, 0x85), c(0x58, 0xc3), c(0x68, 0x05), c(0x68, 0x43), c(0x68, 0x81), c(0x68, 0xde),
+        # zlib ("very rare")
+        c(0x08, 0x3c), c(0x08, 0x7a), c(0x08, 0xb8), c(0x08, 0xf6), c(0x18, 0x38), c(0x18, 0x76), c(0x18, 0xb4), c(0x18, 0xf2), c(0x28, 0x34), c(0x28, 0x72), c(0x28, 0xb0), c(0x28, 0xee), c(0x38, 0x30), c(0x38, 0x6e), c(0x38, 0xac), c(0x38, 0xea), c(0x48, 0x2c), c(0x48, 0x6a), c(0x48, 0xa8), c(0x48, 0xe6), c(0x58, 0x28), c(0x58, 0x66), c(0x58, 0xa4), c(0x58, 0xe2), c(0x68, 0x24), c(0x68, 0x62), c(0x68, 0xbf), c(0x68, 0xfd), c(0x78, 0x3f), c(0x78, 0x7d), c(0x78, 0xbb), c(0x78, 0xf9)
+      ), nrow=2L) # zlib
+    );
+
+    byte1 <- zraw[1L];
+    byte2 <- zraw[2L];
+    for (type in names(known)) {
+      bytes <- known[[type]];
+      a <- (byte1 == bytes[1L,])
+      b <- (byte2 == bytes[2L,])
+      if (any((byte1 == bytes[1L,] & byte2 == bytes[2L,])))
+        return(type);
+    } # for (type ...)
+
+    # Nothing found
+    NA_character_;
+  } # typeOfCompression()
+
+  uncompressZlib <- function(zraw, ..., addGzip=TRUE, BFR.SIZE=1e7) {
+    # From a few runs, it looks like memDecompress(..., type="gzip") can be
+    # emulated by the follow.  The idea of adding a GZIP header comes from
+    # http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix
+    # /HB 2014-04-06
+    if (addGzip) {
+      crc <- function(x) {
+        tail <- tail(x, n=4L)
+        truth <- rev(tail)
+        crcTruth <- paste(truth, collapse="")
+
+        n <- length(x)
+        x2 <- x[1:(n-4)]
+
+###        message(sprintf("CRC in: (tail=%s, calc=%s)", crcTruth, digest::digest(x2, algo="crc32")))
+
+        # FIXME: If we can figure out how to calculate the checksum
+        # then returning it here and replacing the 4-byte tail below
+        # is the correct way to update the checksum. /HB 2014-05-06
+        ## Ex: rawCRC <- rev(as.raw(c(0xf3, 0x53, 0x5e, 0x68)))
+
+        # For now, we don't return anything
+        rawCRC <- raw(0L);
+
+        rawCRC;
+      } # crc()
+
+      rawCRC <- crc(zraw) # reqs digest()
+      rawH <- as.raw(c(0x1F, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00));
+      zraw <- c(rawH, zraw);
+
+      rawCRC <- crc(zraw) # reqs digest()
+
+      # Update checksum
+      if (length(rawCRC) == 4L) zraw[length(zraw)-c(3:0)] <- rawCRC;
+
+      # NOTE: It won't fix the problem to just drop the checksum
+      ## zraw <- zraw[1:(length(zraw)-4)]
+    } # if (addGzip)
+
+    con <- gzcon(rawConnection(zraw, open="rb"));
+    on.exit(close(con));
+
+    res <- raw(0L);
+    repeat {
+      # Call readBin() while capturing standard error, because gzcon()
+      # in uncompressZlip() will output "crc error nnnnnn mmmmmm" until
+      # we figure out how to regenerate the crc32 checksum. /HB 2014-05-06
+      conT <- rawConnection(raw(0L), open="wb");
+      sink(conT, type="message");
+      bfr <- readBin(con, what="raw", n=BFR.SIZE);
+      sink(type="message");
+      conT <- NULL;
+
+      n <- length(bfr);
+      res <- c(res, bfr);
+      bfr <- NULL;  # Not needed anymore
+
+      # Done?
+      if (n < BFR.SIZE) break;
+
+      # ...and just in case (should not happen)
+      if (n == 0L) break;
+    }
+
+###    message(sprintf("CRC out: (calc=%s)", digest::digest(res, algo="crc32")))
+
+    res;
+  } # uncompressZlib()
+
+
+  uncompressMemDecompress <- function(zraw, type="gzip", asText=TRUE, method=c("internal", "emulated"), ...) {
+    # Argument 'type':
+    if (is.na(type)) type <- "gzip";
+
+    # Argument 'method':
+    method <- match.arg(method);
+
+    if (type == "zlib") {
+      unzraw <- uncompressZlib(zraw, addGzip=TRUE);
+      if (asText) unzraw <- rawToChar(unzraw);
+    } else if (type == "gzip") {
+      if (method == "internal") {
+        # To please R CMD check for R versions before R v2.10.0
+        memDecompress <- NULL; rm(list="memDecompress");
+        unzraw <- memDecompress(zraw, type=type, asChar=asText, ...);
+      } else if (method == "emulated") {
+        unzraw <- uncompressZlib(zraw, addGzip=TRUE);
+        if (asText) unzraw <- rawToChar(unzraw);
+      }
+    } else {
+      # To please R CMD check for R versions before R v2.10.0
+      memDecompress <- NULL; rm(list="memDecompress");
+      unzraw <- memDecompress(zraw, type=type, asChar=asText, ...);
+    }
+
     unzraw;
   } # uncompressMemDecompress()
 
@@ -621,7 +766,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   # This is a smart wrapper function around Rcompression::uncompress(),
   # which in order to avoid lack-of-memory allocation errors will via
   # trial and error find a reasonably sized internal inflation buffer.
-  uncompressRcompression <- function(zraw, asText=TRUE, sizeRatio=3, delta=0.9, ...) {
+  uncompressRcompression <- function(zraw, type=NA_character_, asText=TRUE, sizeRatio=3, delta=0.9, ...) {
     # TRICK: Hide 'Rcompression' from R CMD check
     pkgName <- "Rcompression";
     if (!require(pkgName, character.only=TRUE, quietly=TRUE)) {
@@ -685,8 +830,8 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
   # Decompression method
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Default decompress function
-  uncompress <- function(...) {
-    throw("Cannot decompress compressed MAT file because none of the decompression methods are available: ", hpaste(decompressWith0, maxHead=Inf));
+  uncompress <- function(..., type=NA_character_) {
+    throw(sprintf("Cannot decompress (%s) compressed MAT file because none of the decompression methods are available: %s", type, hpaste(decompressWith0, maxHead=Inf)));
   } # uncompress()
   attr(uncompress, "label") <- "N/A";
 
@@ -1517,14 +1662,19 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
         if (tag$type == "miCOMPRESSED") {
           n <- tag$nbrOfBytes;
           zraw <- readBinMat(con=con, what=raw(), n=n);
+
+          # Guess type of compression by inspecting the header bytes;
+          # Source: http://www.groupsrv.com/science/about474488.html
+          type <- typeOfCompression(zraw);
+
           if (verbose) {
             cat(verbose, level=-110, "Decompressing ", n, " bytes");
-            printf(verbose, level=-110, "zraw [%d bytes]: %s\n", length(zraw), hpaste(zraw, maxHead=8, maxTail=8));
+            printf(verbose, level=-110, "zraw [%d bytes; compression type: %s]: %s\n", length(zraw), type, hpaste(zraw, maxHead=8, maxTail=8));
           }
           # Sanity check
           stopifnot(identical(length(zraw), n));
           tryCatch({
-            unzraw <- uncompress(zraw, asText=FALSE);
+            unzraw <- uncompress(zraw, type=type, asText=FALSE);
 
             verbose && printf(verbose, level=-110,
                     "Inflated %.3f times from %d bytes to %d bytes.\n",
@@ -1536,50 +1686,31 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
             msg <- ex$message;
             env <- globalenv(); # To please 'R CMD check'
             assign("R.matlab.debug.zraw", zraw, envir=env);
+
             # Guess type of compression by inspecting the header bytes;
             # Source: http://www.groupsrv.com/science/about474488.html
-            known <- list(
-              compress = "1f9d",
-              gzip     = "1f8b",
-              zip      = "504b",
-              bzip2    = "425a",
-              pack     = "1f1e",
-              LZH      = "1f50",
-              # zlib ("common")
-              zlib     = "7801, 785e, 789c, 78da",
-              # zlib ("rare")
-              zlib     = "081d, 085b, 0899, 08d7, 1819, 1857, 1895, 18d3,
-                          2815, 2853, 2891, 28cf, 3811, 384f, 388d, 38cb,
-                          480d, 484b, 4889, 48c7, 5809, 5847, 5885, 58c3,
-                          6805, 6843, 6881, 68de",
-              # zlib ("very rare")
-              zlib     = "083c, 087a, 08b8, 08f6, 1838, 1876, 18b4, 18f2,
-                          2834, 2872, 28b0, 28ee, 3830, 386e, 38ac, 38ea,
-                          482c, 486a, 48a8, 48e6, 5828, 5866, 58a4, 58e2,
-                          6824, 6862, 68bf, 68fd, 783f, 787d, 78bb, 78f9"
-            );
+            if (is.na(type)) type <- "<unknown>";
 
-            twobytes <- zraw[1:2];
-            what <- "<unknown>";
-            for (kk in seq_along(known)) {
-              bytes <- known[[kk]];
-              bytes <- gsub("[ \n]*", "", bytes);
-              bytes <- unlist(strsplit(bytes, split=",", fixed=TRUE));
-              bytes <- gsub("(..)(..)", "\\\\x\\1\\\\x\\2", bytes);
-              bytes <- sprintf("charToRaw('%s')", bytes);
-              bytes <- lapply(bytes, FUN=function(code) {
-                eval(parse(text=code, keep.source=FALSE));
-              })
-              for (jj in seq_along(bytes)) {
-                if (all(bytes[[jj]] == twobytes)) {
-                  what <- names(known)[kk];
-                  break;
-                }
-              }
-              if (what != "<unknown>") break;
+            # Translate the integer error code in error messages such as
+            # "internal error -3 in memDecompress(2)".
+            pattern <- "(.*internal error )([-0-9]*)( in memDecompress[(])([0-9])([)].*)";
+            if (regexpr(pattern, msg) != -1L) {
+              zCode <- gsub(pattern, "\\2", msg);
+              tCode <- gsub(pattern, "\\4", msg);
+
+              zCodes <- c(Z_OK=0, Z_STREAM_END=1, Z_NEED_DICT=2,
+                          Z_ERRNO=-1, Z_STREAM_ERROR=-2, Z_DATA_ERROR=-3,
+                          Z_MEM_ERROR=-4, Z_BUF_ERROR=-5, Z_VERSION_ERROR=-6);
+              zLabel <- names(zCodes)[match(zCode, zCodes)];
+
+              tCodes <- c(none=1, gzip=2, bzip2=3, xz=4, unknown=5)
+              tLabel <- names(tCodes)[match(tCode, tCodes)];
+
+              msgT <- gsub(pattern, sprintf("\\1%s\\3%s\\5", zLabel, tLabel), msg)
+              msg <- sprintf("'%s' (translated from '%s')", msgT, msg);
             }
 
-            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (%s [%d bytes; first two bytes => '%s']) using '%s'. Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", hpaste(zraw, maxHead=8, maxTail=8), length(zraw), what, attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
+            msg <- sprintf("INTERNAL ERROR: Failed to decompress data (%s [%d bytes; first two bytes => '%s']) using '%s'. Please report to the R.matlab (v%s) package maintainer (%s). The reason was: %s", hpaste(zraw, maxHead=8, maxTail=8), length(zraw), type, attr(uncompress, "label"), getVersion(R.matlab), getMaintainer(R.matlab), msg);
             onError <- getOption("R.matlab::readMat/onDecompressError", "error");
             if (identical(onError, "warning")) {
               warning(msg);
@@ -1591,7 +1722,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
             } else {
               throw(msg);
             }
-          });
+          }) # tryCatch()
           zraw <- NULL; # Not needed anymore
 
           tag <- mat5ReadTag(this);
@@ -2186,6 +2317,7 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
           matrix <- as.integer(matrix);
           dim(matrix) <- dimensionsArray$dim;
         } else if (arrayFlags$class == "mxCHAR_CLASS") {
+          verbose && cat(verbose, level=-5, "Encoding type: ", tag$type)
           matrix <- matToCharArray(matrix, tag$type);
           dim <- dimensionsArray$dim;
           # AD HOC/special/illegal case?  /HB 2010-09-18
@@ -2400,6 +2532,24 @@ setMethodS3("readMat", "default", function(con, maxLength=NULL, fixNames=TRUE, d
 
 ###########################################################################
 # HISTORY:
+# 2014-05-06
+# o Added internal typeOfCompression() that infers type of compression
+#   from the first two bytes.
+# o Added internal uncompressZlib(), which seems to be able to uncompress
+#   zlib streams via gzcon() but currently gives non-interruptive
+#   "crc error 9153d47f f3535e68" messages from gzcon().
+# 2014-05-01
+# o Now the error messages on memDemprocess are slightly more informative:
+#   'internal error Z_DATA_ERROR in memDecompress(gzip)' instead of only
+#   'internal error -3 in memDecompress(2)'.
+# 2014-04-28
+# o Renamed convertGeneric() to convertASCII(), which now convert
+#   all 8-bit ASCII characters.
+# o BUG FIX: Local function convertGeneric() of readMat() only preserved
+#   ASCII character in (0,32-127), which for instance meant that newlines
+#   were dropped.  Reported by Steven Pav (San Francisco, CA).
+# 2014-04-26
+# o SPEEDUP: MAT5 mxCHAR_CLASS structures are now read slighly faster.
 # 2014-02-03
 # o BACKWARD COMPATIBILITY: For R (< 3.0.0), readMat() now defines a
 #   local parse() function that supports argument 'keep.source'.
