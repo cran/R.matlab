@@ -1,6 +1,6 @@
-8c34c55cead95a03e895f9db4ad6ba9b *DESCRIPTION
+7aacadf40dec222ebd1067357f687654 *DESCRIPTION
 0becc9ff038bf9785e56e75e7613f2be *NAMESPACE
-434e0ebc6c54ceff01fb4950f6cf9968 *NEWS
+69754f39c44e499e29f8d5dcd1c22097 *NEWS
 5b3e0291bcc049d9ada9005162c5259a *R/000.R
 36bad70ed1462ea75229e86c91ca7493 *R/006.fixVarArgs.R
 5ad1d3e5ae2fc50e5a277519ea81aa5b *R/901.MatlabServer.R
@@ -8,7 +8,7 @@ b2509888b807a8e9a2e5b7f15b175af0 *R/999.NonDocumentedObjects.R
 09802327bf5c312e56ad2feaef017951 *R/999.package.R
 797bef586de97f94bc3cef0dc566a932 *R/Matlab.R
 8d74fa8bff239449f25d6dab78fe90b7 *R/Sys.setenv.patch.R
-dd497d18f5252fbdccfc4b0b880bc7aa *R/readMat.R
+be9f5e15a6d27341c5138aed40eb7f36 *R/readMat.R
 d08856d3241c4f6d395060280a205ebb *R/writeMat.R
 464392decd5cb89c4a7c742e7ecbfae6 *R/zzz.R
 fabc10d0915f34279ca8d7dce7c0b6af *inst/externals/InputStreamByteWrapper.class
@@ -47,7 +47,7 @@ f8f44b8cb36e5eff2a4c05799fb78f28 *inst/mat-files/structLooped.mat
 713ff0f7a1c5d668d093afa6cc91dc2c *man/1._The_MATLAB_server_running_in_MATLAB.Rd
 2761f3c076656df2d49c712cc4c3c7cd *man/Matlab.Rd
 5dbd58c5673e0bea54dd798e0864a69e *man/Non-documented_objects.Rd
-28471f183f959e80cadf035d1c50ec7b *man/R.matlab-package.Rd
+f26f90ffda359b7e2dadae3f596a0530 *man/R.matlab-package.Rd
 aa7293adb77acabada0c15e5ec4328ae *man/Sys.setenv.Rd
 9f4393e8dcf7b9bf0c98f14f2b5a278f *man/as.character.Matlab.Rd
 55fe2be74156426cbf6d93230bca3570 *man/close.Matlab.Rd
@@ -68,6 +68,6 @@ f62b87bb7e5a4a8ac14b19a348189883 *man/setVerbose.Matlab.Rd
 2e11b090e9c34040fc235e964c0af675 *man/writeMat.Rd
 d4285e5b7bee856b65608c5863cdfec6 *tests/Matlab,options.R
 80d3dfb12f430543d0c1dcc201301428 *tests/Matlab.R
-5b1aae3b09ac6eb12daa026db07ab363 *tests/readMat,noattach.R
+62821de760ed21183cfb3b5420b7a44e *tests/readMat,noattach.R
 3b6371d5c85531cf378b15e1be1eeb9a *tests/readMat.R
 99431575b0b3f5479a59ca8ed4cb4178 *tests/writeMat.R

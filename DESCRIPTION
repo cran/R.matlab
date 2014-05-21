@@ -1,10 +1,10 @@
 Package: R.matlab
-Version: 3.0.0
+Version: 3.0.1
 Depends: R (>= 2.5.0)
 Imports: utils, R.methodsS3 (>= 1.6.1), R.oo (>= 1.18.0), R.utils (>=
         1.32.4)
 Suggests: Matrix, SparseM
-Date: 2014-05-06
+Date: 2014-05-18
 Title: Read and write of MAT files together with R-to-MATLAB
         connectivity
 Authors@R: c(
@@ -19,7 +19,7 @@ Description: This package provides methods readMat() and writeMat() to read and 
 License: LGPL (>= 2.1)
 LazyLoad: TRUE
 ByteCompile: TRUE
-Packaged: 2014-05-17 14:54:56 UTC; hb
+Packaged: 2014-05-21 18:22:04 UTC; hb
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2014-05-17 19:47:00
+Date/Publication: 2014-05-21 21:21:50
