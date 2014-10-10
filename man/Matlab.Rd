@@ -119,9 +119,9 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
   Moreover, on non-Windows systems, the above command will start MATLAB
   in the background making all MATLAB messages be sent to the \R output
   screen.
-  In addition, the method will copy the MatlabServer and
-  InputStreamByteWrapper files to the current directory and start
-  MATLAB from there.
+  In addition, the method will copy the MatlabServer.m and
+  InputStreamByteWrapper.class files to the current directory
+  and start MATLAB from there.
 }
 
 \section{Starting the MATLAB server without \R}{
@@ -141,8 +141,8 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
   MATLAB classpath.txt file is located. Copy this file to the
   \emph{current directory}, and append the \emph{path} (the directory)
   of InputStreamByteWrapper.class to the end of classpath.txt.
-  The path of InputStreamByteWrapper.class should be the same as
-  the path of the MatlabServer.m that you identified above.\cr
+  The path of InputStreamByteWrapper.class can be identified by
+  \code{system.file("java", package="R.matlab")} in R.\cr
 
   \bold{Lazy alternative:} Instead of setting path and classpaths,
   you may try to copy the MatlabServer.m and InputStreamByteWrapper.class
@@ -169,13 +169,14 @@ $, $<-, [[, [[<-, as.character, attach, attachLocally, clearCache, clearLookupCa
 To get started, type one of these: helpwin, helpdesk, or demo.
 For product information, visit www.mathworks.com.
 
-Running MatlabServer v2.2.0
+Running MatlabServer v3.0.2
 MATLAB v7.x or higher detected.
 Saving with option -V6.
 Added InputStreamByteWrapper to dynamic Java CLASSPATH.
 ----------------------
 MATLAB server started!
 ----------------------
+MATLAB working directory: /home/AwesomeUser/FabulousProject/
 Trying to open server socket (port 9999)...done.
 
   }
@@ -229,6 +230,32 @@ Trying to open server socket (port 9999)...done.
   takes a long time for the server to finish resulting in a time-out
   exception.  By default this happens after 30 seconds, but it can
   be changed by modifying options, cf. \code{\link{setOption}}().
+}
+
+\section{Multiple parallel MATLAB instances}{
+  You can launch multiple parallel MATLAB instance using this interface.
+  This can be done in separate R sessions or in a single one.  As long
+  as each MATLAB server/session is communicating on a separate port,
+  there is no limitation in the number of parallel MATLAB instances
+  that can be used.  Example:
+
+  \preformatted{
+   > library('R.matlab')
+   ## Start two seperate MATLAB servers
+   > Matlab$startServer(port=9997)
+   > Matlab$startServer(port=9999)
+
+   ## Connect to each of them
+   > matlab1 <- Matlab(port=9997); open(matlab1)
+   > matlab2 <- Matlab(port=9999); open(matlab2)
+
+   ## Evaluate expression in each of them
+   > evaluate(matlab1, "x=1+2; x")
+   > evaluate(matlab2, "y=1+2; y")
+  }
+
+  Note that the two MATLAB instance neither communicate nor
+  share variables.
 }
 
 \examples{\dontrun{

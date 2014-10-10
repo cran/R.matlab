@@ -24,7 +24,7 @@
 % [3] http://www.mathworks.com/access/helpdesk/help/toolbox/
 %                                              modelsim/a1057689278b4.html
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-disp('Running MatlabServer v2.2.0');
+disp('Running MatlabServer v3.0.2');
 
 %  addpath R/R_LIBS/linux/library/R.matlab/misc/
 
@@ -103,6 +103,8 @@ fprintf(1, '----------------------\n');
 fprintf(1, 'MATLAB server started!\n');
 fprintf(1, '----------------------\n');
 
+fprintf(1, 'MATLAB working directory: %s\n', pwd);
+
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 % Initiate server socket to which clients may connect
@@ -134,9 +136,9 @@ fprintf(1, 'done.\n');
 % Open input and output streams
 
 % Wait for the client to connect
+fprintf(1, 'Waiting for client to connect (port %d)...', port);
 clientSocket = accept(server);
-
-fprintf(1, 'Connected to client.\n');
+fprintf(1, 'connected.\n');
 
 % ...client connected.
 is = java.io.DataInputStream(getInputStream(clientSocket));
@@ -150,6 +152,9 @@ os = java.io.DataOutputStream(getOutputStream(clientSocket));
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 % Commands
 commands = {'eval', 'send', 'receive', 'send-remote', 'receive-remote', 'echo'};
+
+lasterr = [];
+variables = [];
 
 % As long as we receive data, echo that data back to the client.
 state = 0;
@@ -170,11 +175,11 @@ while (state >= 0),
     bfr = char(readUTF(is));
     fprintf(1, '"eval" string: "%s"\n', bfr);
     try 
-      eval(bfr);, 
+      eval(bfr); 
       writeByte(os, 0);
       fprintf(1, 'Sent byte: %d\n', 0);
       flush(os);
-    catch,
+    catch
       fprintf(1, 'EvaluationException: %s\n', lasterr);
       writeByte(os, -1);
       fprintf(1, 'Sent byte: %d\n', -1);
@@ -196,6 +201,7 @@ while (state >= 0),
       variable = variables{k};
       if (exist(variable) ~= 1)
         lasterr = sprintf('Variable ''%s'' not found.', variable);
+        disp(lasterr);
         ok = 0;
         break;
       end;
@@ -227,6 +233,7 @@ while (state >= 0),
       variable = variables{k};
       if (exist(variable) ~= 1)
         lasterr = sprintf('Variable ''%s'' not found.', variable);
+        disp(lasterr);
         ok = 0;
         break;
       end;
@@ -333,6 +340,10 @@ close(server);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % HISTORY:
+% 2014-06-23 [v3.0.2]
+% o ROBUSTNESS: Variables 'lasterr' and 'variables' are now always 
+%   defined. Potential bug spotted by Steven Jaffe at Morgan Stanley.
+% o Added more progress/verbose output, e.g. current working directory.
 % 2014-01-21 [v2.2.0]
 % o BUG FIX: The MatlabServer.m script would incorrectly consider 
 %   Matlab v8 and above as Matlab v6.  Thanks to Frank Stephen at NREL

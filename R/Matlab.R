@@ -71,9 +71,9 @@
 #   Moreover, on non-Windows systems, the above command will start MATLAB
 #   in the background making all MATLAB messages be sent to the \R output
 #   screen.
-#   In addition, the method will copy the MatlabServer and
-#   InputStreamByteWrapper files to the current directory and start
-#   MATLAB from there.
+#   In addition, the method will copy the MatlabServer.m and
+#   InputStreamByteWrapper.class files to the current directory
+#   and start MATLAB from there.
 # }
 #
 # \section{Starting the MATLAB server without \R}{
@@ -93,8 +93,8 @@
 #   MATLAB classpath.txt file is located. Copy this file to the
 #   \emph{current directory}, and append the \emph{path} (the directory)
 #   of InputStreamByteWrapper.class to the end of classpath.txt.
-#   The path of InputStreamByteWrapper.class should be the same as
-#   the path of the MatlabServer.m that you identified above.\cr
+#   The path of InputStreamByteWrapper.class can be identified by
+#   \code{system.file("java", package="R.matlab")} in R.\cr
 #
 #   \bold{Lazy alternative:} Instead of setting path and classpaths,
 #   you may try to copy the MatlabServer.m and InputStreamByteWrapper.class
@@ -163,6 +163,32 @@
 #   takes a long time for the server to finish resulting in a time-out
 #   exception.  By default this happens after 30 seconds, but it can
 #   be changed by modifying options, cf. @see "setOption".
+# }
+#
+# \section{Multiple parallel MATLAB instances}{
+#   You can launch multiple parallel MATLAB instance using this interface.
+#   This can be done in separate R sessions or in a single one.  As long
+#   as each MATLAB server/session is communicating on a separate port,
+#   there is no limitation in the number of parallel MATLAB instances
+#   that can be used.  Example:
+#
+#   \preformatted{
+#    > library('R.matlab')
+#    ## Start two seperate MATLAB servers
+#    > Matlab$startServer(port=9997)
+#    > Matlab$startServer(port=9999)
+#
+#    ## Connect to each of them
+#    > matlab1 <- Matlab(port=9997); open(matlab1)
+#    > matlab2 <- Matlab(port=9999); open(matlab2)
+#
+#    ## Evaluate expression in each of them
+#    > evaluate(matlab1, "x=1+2; x")
+#    > evaluate(matlab2, "y=1+2; y")
+#   }
+#
+#   Note that the two MATLAB instance neither communicate nor
+#   share variables.
 # }
 #
 # \examples{\dontrun{@include "../incl/Matlab.Rex"}}
@@ -680,6 +706,7 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #    This argument is ignored on non-Windows systems.}
 #  \item{options}{A @character @vector of options used to call the
 #    MATLAB application.}
+#  \item{workdir}{The working directory to be used by MATLAB.}
 #  \item{...}{Not used.}
 # }
 #
@@ -699,11 +726,12 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #   option, e.g. \code{options(matlab="/opt/bin/matlab6.1")}. If no such
 #   option exists, the value \code{"matlab"} will be used.
 #
-#   The MATLAB server relies on two files: 1) MatlabServer.m and
-#   2) InputStreamByteWrapper.class (from InputStreamByteWrapper.java).
-#   These files exists in the externals/ directory of this package. However,
-#   if they do not exist in the current directory, which is the directory
-#   where MATLAB is started, copies of them will automatically be made.
+#   The MATLAB server relies on two files:
+#   1) MatlabServer.m and 2) InputStreamByteWrapper.class
+#   These files exists in the externals/ and java/ directories of this
+#   package. However, if they do not exist in the current directory,
+#   which is the directory where MATLAB is started, copies of them will
+#   automatically be made.
 # }
 #
 # @author
@@ -712,28 +740,45 @@ setMethodS3("readResult", "Matlab", function(this, ...) {
 #   @seeclass
 # }
 #*/###########################################################################
-setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), ...) {
+setMethodS3("startServer", "Matlab", function(this, matlab=getOption("matlab"), port=9999, minimize=TRUE, options=c("nodesktop", "nodisplay", "nosplash"), workdir=".", ...) {
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Validate arguments
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Argument 'port':
   if (!is.null(port)) {
     port <- Arguments$getInteger(port, range=c(1023,65535));
     Sys.setenv("MATLABSERVER_PORT"=port);
   }
 
+  # Argument 'workdir':
+  workdir <- Arguments$getWritablePath(workdir);
+
+
   enter(this$.verbose, "Starting the MATLAB server");
   on.exit(exit(this$.verbose), add=TRUE);
 
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  # Set working directory
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if (!is.null(workdir) && (workdir != ".")) {
+    opwd <- setwd(workdir);
+    on.exit(setwd(opwd), add=TRUE);
+    cat(this$.verbose, level=-1, "MATLAB working directory: ", getwd());
+  }
+
+
+  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   # Make MATLAB server files available in the current directory
   # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  srcPath <- system.file("externals", package="R.matlab");
-  filenames <- c("MatlabServer.m", "InputStreamByteWrapper.class",
-                 "InputStreamByteWrapper.java");
-  for (filename in filenames) {
+  src1 <- system.file(package="R.matlab", "externals", "MatlabServer.m");
+  src2 <- system.file(package="R.matlab", "java", "InputStreamByteWrapper.class");
+  srcs <- c(src1, src2);
+  for (src in srcs) {
+    filename <- basename(src);
     enter(this$.verbose, level=-1, sprintf("MATLAB server file '%s'", filename));
     if (isFile(filename)) {
       cat(this$.verbose, level=-1, "Already exists. Skipping.");
     } else {
-      src <- file.path(srcPath, filename);
       copyFile(src, filename, verbose=less(this$.verbose, 50));
     }
 
@@ -1044,7 +1089,7 @@ setMethodS3("setFunction", "Matlab", function(this, code, name=NULL, collapse="\
 
   pos <- regexpr("^[ \t\n\r\v]*function[^=]*=[^ \t\n\r\v(]", code);
   if (pos == -1) {
-    throw("The code does not contain a proper MATLAB function defintion: ", substring(code, 1, 20), "...");
+    throw("The code does not contain a proper MATLAB function definition: ", substring(code, 1, 20), "...");
   }
 
   if (is.null(name)) {
@@ -1132,6 +1177,14 @@ setMethodS3("setVerbose", "Matlab", function(this, threshold=0, ...) {
 
 ############################################################################
 # HISTORY:
+# 2014-10-10
+# o CRAN POLICIES/CLEANUP: Matlab$startServer() no longer copies the
+#   InputStreamByteWrapper.java, only the *.class file, which was moved
+#   to java/ of the *installed* package.
+# 2014-07-24
+# o Added section on parallel MATLAB instances to help('Matlab').
+# 2014-06-22
+# o Added argument 'workdir' to Matlab$startServer().
 # 2014-01-28
 # o CLEANUP: open() for Matlab no longer generates warnings on
 #   "socketConnection(...) ... cannot be opened", which occured while

@@ -1,6 +1,38 @@
 Package: R.matlab
 =================
 
+Version: 3.1.1 [2014-10-10]
+o CRAN POLICIES/CLEANUP: Source code file InputStreamByteWrapper.java
+  is no longer *installed* with this package.  It is only the
+  precompiled InputStreamByteWrapper.class file that is installed.
+  Updated documentation accordingly.
+o Resubmitted to CRAN.
+
+
+Version: 3.1.0 [2014-10-09]
+o Bumped up package dependencies.
+o Submitted to CRAN.
+
+
+Version: 3.0.4 [2014-10-05]
+o BUG FIX: readMat() parsed an mxCELL_CLASS structure incorrectly if
+  one of its names was empty.  Thanks Dieter Menne at Menne Biomed
+  Consulting in Germany for reporting on this.
+
+
+Version: 3.0.3 [2014-07-24]
+o Added section on parallel MATLAB instances to help('Matlab').
+
+
+Version: 3.0.2 [2014-06-22]
+o Added argument 'workdir' to Matlab$startServer() for setting the
+  working directory of MATLAB.  Thanks to Steven Jaffe at Morgan
+  Stanley for the suggestion.
+o ROBUSTNESS: Under certain circumstances the MATLAB server script
+  (MatlabServer.m) would try to access variables that were not yet
+  defined. Thanks to Steven Jaffe at Morgan Stanley for spotting this.
+
+
 Version: 3.0.1 [2014-05-18]
 o BUG FIX: Internal uncompressZlib() of readMat() opened several
   raw connections without closing them.  Added system package test.

@@ -23,11 +23,11 @@
 \usage{
 ## Static method (use this):
 ## Matlab$startServer(matlab=getOption("matlab"), port=9999, minimize=TRUE,
-##   options=c("nodesktop", "nodisplay", "nosplash"), ...)
+##   options=c("nodesktop", "nodisplay", "nosplash"), workdir=".", ...)
 
 ## Don't use the below:
 \method{startServer}{Matlab}(this, matlab=getOption("matlab"), port=9999, minimize=TRUE,
-  options=c("nodesktop", "nodisplay", "nosplash"), ...)
+  options=c("nodesktop", "nodisplay", "nosplash"), workdir=".", ...)
 }
 
 \arguments{
@@ -44,6 +44,7 @@
    This argument is ignored on non-Windows systems.}
  \item{options}{A \code{\link[base]{character}} \code{\link[base]{vector}} of options used to call the
    MATLAB application.}
+ \item{workdir}{The working directory to be used by MATLAB.}
  \item{...}{Not used.}
 }
 
@@ -63,11 +64,12 @@
   option, e.g. \code{options(matlab="/opt/bin/matlab6.1")}. If no such
   option exists, the value \code{"matlab"} will be used.
 
-  The MATLAB server relies on two files: 1) MatlabServer.m and
-  2) InputStreamByteWrapper.class (from InputStreamByteWrapper.java).
-  These files exists in the externals/ directory of this package. However,
-  if they do not exist in the current directory, which is the directory
-  where MATLAB is started, copies of them will automatically be made.
+  The MATLAB server relies on two files:
+  1) MatlabServer.m and 2) InputStreamByteWrapper.class
+  These files exists in the externals/ and java/ directories of this
+  package. However, if they do not exist in the current directory,
+  which is the directory where MATLAB is started, copies of them will
+  automatically be made.
 }
 
 \author{Henrik Bengtsson}
