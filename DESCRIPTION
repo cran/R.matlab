@@ -1,10 +1,10 @@
 Package: R.matlab
-Version: 3.5.1
+Version: 3.6.0
 Depends: R (>= 2.14.0)
 Imports: methods, utils, R.methodsS3 (>= 1.7.1), R.oo (>= 1.20.0),
-        R.utils (>= 2.2.0)
+        R.utils (>= 2.3.0)
 Suggests: Matrix, SparseM
-Date: 2016-03-27
+Date: 2016-07-05
 Title: Read and Write MAT Files and Call MATLAB from Within R
 Authors@R: c(
   person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
@@ -21,6 +21,6 @@ ByteCompile: TRUE
 URL: https://github.com/HenrikBengtsson/R.matlab
 BugReports: https://github.com/HenrikBengtsson/R.matlab/issues
 NeedsCompilation: no
-Packaged: 2016-03-27 20:23:02 UTC; hb
+Packaged: 2016-07-05 21:06:18 UTC; hb
 Repository: CRAN
-Date/Publication: 2016-03-28 00:28:01
+Date/Publication: 2016-07-05 23:41:57
