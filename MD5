@@ -1,14 +1,14 @@
-0c2ce18d1abc4c6ba6c6ecc45ae7d3f8 *DESCRIPTION
+8e8e932df6df41bc510d87b3f9d76199 *DESCRIPTION
 68113d06b683cf2cfd4becd0c769aa2e *NAMESPACE
-51583febc19eae552f12dab70376ca28 *NEWS
+81d43d5e451368f5b7cee2781a9fb690 *NEWS
 5b3e0291bcc049d9ada9005162c5259a *R/000.R
 36bad70ed1462ea75229e86c91ca7493 *R/006.fixVarArgs.R
 eeeed262c4b2df5d32021cd917aa2fc6 *R/901.MatlabServer.R
 b2509888b807a8e9a2e5b7f15b175af0 *R/999.NonDocumentedObjects.R
 35df21b5f102ca6e0ee5bfc0ac9a0ff9 *R/999.package.R
 09b5e741059633780b7e8a1ee45a9bee *R/Matlab.R
-b8b28108fc2adac2d7d912e7d9a364e7 *R/readMat.R
-8767dee7323d1508dd0452d7c7eba572 *R/writeMat.R
+f0c2ac12d896c3c00621202010706585 *R/readMat.R
+02d04ce75652e878aa5cce2117681300 *R/writeMat.R
 94befb0fc262f4f08d1a2fa562c3e80e *R/zzz.R
 f6148d96cc20b186ad1bbc5fb7e3e226 *inst/externals/MatlabServer.m
 fabc10d0915f34279ca8d7dce7c0b6af *inst/java/InputStreamByteWrapper.class
@@ -20,6 +20,9 @@ d7f40f04d84ede73b3694ab528e14f41 *inst/mat-files/MatlabStructure.mat
 8ca3b7568ed9f0eea26d73a1ca3da145 *inst/mat-files/Matrix-LittleEndian-v5.mat
 21f7d0037733e22deb3d3f87581ed958 *inst/mat-files/Matrix-v4.mat
 d7f40f04d84ede73b3694ab528e14f41 *inst/mat-files/Matrix-v5.mat
+9b200bd3d70b4aa4446de0c1a727f983 *inst/mat-files/Matrix-v6.mat
+1849f30b7146029111392838add0d992 *inst/mat-files/Matrix-v7.3.mat
+7f1dd512a414c2f3753d87c9d7774e4b *inst/mat-files/Matrix-v7.mat
 3ba1cde712ac9e8e8107adaaafc2e12f *inst/mat-files/NestedMiMATRIX,problem1,v5,compressed.mat
 6b7c872aa969cb51f6695bf6df0eaaa0 *inst/mat-files/NestedMiMATRIX,problem2,v5,compressed.mat
 0f79a806dcdaa239ab11455e34c7afc0 *inst/mat-files/NestedMiMATRIX,problem3,v5,compressed.mat
@@ -50,7 +53,7 @@ f8f44b8cb36e5eff2a4c05799fb78f28 *inst/mat-files/structLooped.mat
 34d5ab3717330586326a045a4489795b *man/1._The_MATLAB_server_running_in_MATLAB.Rd
 0f292b6ebc9255cab55e65a3bfeae792 *man/Matlab.Rd
 5dbd58c5673e0bea54dd798e0864a69e *man/Non-documented_objects.Rd
-091f78b758c4d6429972d05d8c187b1b *man/R.matlab-package.Rd
+5a223510d7c6450be9dce041762537a9 *man/R.matlab-package.Rd
 9f4393e8dcf7b9bf0c98f14f2b5a278f *man/as.character.Matlab.Rd
 55fe2be74156426cbf6d93230bca3570 *man/close.Matlab.Rd
 3f7a762d38d460094d3d37c6d9a7ce65 *man/evaluate.Matlab.Rd
@@ -71,6 +74,6 @@ b7fe29cb4062cba967cf94340a78ae99 *man/writeMat.Rd
 d4285e5b7bee856b65608c5863cdfec6 *tests/Matlab,options.R
 34e6b1f8e030f17a4d59dc836018b4aa *tests/Matlab.R
 62821de760ed21183cfb3b5420b7a44e *tests/readMat,noattach.R
-c9346515ea17c1444e9034066257a489 *tests/readMat.R
+78843a3fe149ea7db3723a06f9ddc0f1 *tests/readMat.R
 3ccb5923e5179147b92c819c39f3ddff *tests/startup.R
 f46b9aa28b77da6a85bd22b59fe94236 *tests/writeMat.R
