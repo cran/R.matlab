@@ -1,13 +1,13 @@
-c00dfe206ef59173791ea86c0e8b4de8 *DESCRIPTION
+79f6144296b3021e0dd0e91503c95f88 *DESCRIPTION
 3356178b354520a64ba752bc6a3200bb *NAMESPACE
-dbff1a48b2ae2971f46efa3b35b93f62 *NEWS.md
+9551fc0dbeca6eac6d76b84b0715ef16 *NEWS.md
 3f037c450b4aab445d0fe818f55ee3a4 *R/000.R
 d1d7023b8f49e0b29f9a3c23b79b2a4f *R/006.fixVarArgs.R
 e389900662d5aa5ba459c2ef32ccb983 *R/901.MatlabServer.R
 0ce9bf478ddf9a7a09df9eaf96b4cf4e *R/999.NonDocumentedObjects.R
 ddded31a77bbb2e373097903d994bf30 *R/999.package.R
 5624ef972f787eae1a213475bd7cab61 *R/Matlab.R
-a6dfd45269a38e364d9b5f4237d4a86c *R/readMat.R
+e556568f016466a1f57b85ae1cf7a33e *R/readMat.R
 17a9e5f5450fed0a7d14707dac12b89e *R/utils.R
 5f88ecad5d0751ec338e36a873c26fb0 *R/writeMat.R
 7ff07df93e4cfa33b9d868302e304675 *R/zzz.R
@@ -48,6 +48,7 @@ f501def4cac57b17f5813378f6b78062 *inst/mat-files/TextWithNewlines.mat
 b26662739e791bce41c5bc5851073587 *inst/mat-files/TwoMATs.stream
 71ca600b60de211e4f8ad3724adfa767 *inst/mat-files/aFunction,arraytype=16-v5.mat
 d86442dce571794b8f3a44168df5a7a8 *inst/mat-files/datetime,arraytype=17-v5.mat
+91b8e72fd365d13b0299740f2c3d5571 *inst/mat-files/emptyString_issue59-v5.mat
 72ed4b23ebed9380d3171927f487d202 *inst/mat-files/emptyStrings.mat
 58593ab7ddbb4befc5034ac5109a91f5 *inst/mat-files/nonsignedByte1.mat
 1a70de8166918ccd1427f2ea8d1b5c5c *inst/mat-files/nonsignedByte2.mat
@@ -59,7 +60,7 @@ f8f44b8cb36e5eff2a4c05799fb78f28 *inst/mat-files/structLooped.mat
 3cecc927589f16c097f228207bc92c8f *man/1._The_MATLAB_server_running_in_MATLAB.Rd
 7582d690832d5bdd73268a9eec2c373f *man/Matlab.Rd
 5dbd58c5673e0bea54dd798e0864a69e *man/Non-documented_objects.Rd
-7cad458876481920333e66db071a54fa *man/R.matlab-package.Rd
+92942d03b0fb63a76ff2d241094d6230 *man/R.matlab-package.Rd
 9f4393e8dcf7b9bf0c98f14f2b5a278f *man/as.character.Matlab.Rd
 55fe2be74156426cbf6d93230bca3570 *man/close.Matlab.Rd
 3f7a762d38d460094d3d37c6d9a7ce65 *man/evaluate.Matlab.Rd
